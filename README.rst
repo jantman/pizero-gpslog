@@ -40,7 +40,14 @@ Software
 
 TBD.
 
+Configuration
+-------------
+
+TBD.
+
 Testing
 -------
 
-There currently aren't any code tests. But there's some tox-based helpers to aid with manual testing.
+There currently aren't any code tests. But there are some scripts and tox-based helpers to aid with manual testing.
+
+* ``pizero_gpslog/tests/data/runfake.sh`` - Runs `gpsfake <http://www.catb.org/gpsd/gpsfake.html>`_ (provided by gpsd) with sample data. Takes optional arguments for ``--nofix`` (data with no GPS fix) or ``--stillfix`` (fix but not moving).
