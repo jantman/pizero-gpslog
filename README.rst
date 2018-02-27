@@ -33,7 +33,7 @@ Installation
 Hardware
 ++++++++
 
-
+Plug your GPS into the USB input on the RPi, via a "usb on the go" (USB OTG) cable. Then plug the Pi into a power source. Everything else should be automatic after the installation described below.
 
 Software
 ++++++++
@@ -57,6 +57,7 @@ This assumes you're running on Linux...
 8. ``sudo apt-get update && sudo apt-get install haveged git python3-gpiozero python3-setuptools python3-pip gpsd``
 9. Run sudo `raspi-config <https://github.com/RPi-Distro/raspi-config>`_ to set things like the locale and timezone. Personally, I usually leave the ``pi`` user password at its default for devices that will never be on an untrusted network.
 10. In ``/home/pi``, run ``git clone https://github.com/jantman/pizero-gpslog.git && cd pizero-gpslog && sudo python3 setup.py develop && sudo pizero-install``. The installer, ``pizero-install``, templates out a systemd unit file, reloads systemd, and enables the unit. Environment variables to set for the service are taken from command line arguments.
+11. If you're ready, ``sudo systemctl start pizero-gpslog`` to start it. Otherwise, it will start on the next boot.
 
 Configuration
 -------------
@@ -73,7 +74,7 @@ pizero-gpslog's entire configuration is provided via environment variables. Ther
 Running
 -------
 
-Configure as described above, then run ``pizero-gpslog``.
+Configure as described above, then use the ``pizero-gpslog`` systemd service.
 
 LED Outputs
 +++++++++++
