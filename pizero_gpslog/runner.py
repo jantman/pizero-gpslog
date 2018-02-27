@@ -40,9 +40,8 @@ import logging
 import time
 import json
 from datetime import datetime
-import atexit
 
-from pizero_gpslog.gpsd import GpsClient, GpsResponse
+from pizero_gpslog.gpsd import GpsClient, NoActiveGpsError, NoFixError
 
 if 'LED_PIN_RED' in os.environ and 'LED_PIN_GREEN' in os.environ:
     from gpiozero import LED
@@ -80,7 +79,12 @@ class GpsLogger(object):
             while True:
                 time.sleep(self.interval_sec)
                 logger.debug('Reading current position from gpsd')
-                packet = self.gps.current_fix
+                try:
+                    packet = self.gps.current_fix
+                except NoActiveGpsError:
+                    packet.mode = 0
+                except NoFixError:
+                    packet.mode = 1
                 if packet.mode == 0:
                     logger.warning(
                         'No data returned by gpsd (no active GPS) - %s',

@@ -74,6 +74,7 @@ setup(
     entry_points="""
     [console_scripts]
     pizero-gpslog = pizero_gpslog.runner:main
+    pizero-install = pizero_gpslog.installer:main
     """,
     keywords="raspberry pi rpi gps log logger gpsd",
     classifiers=classifiers

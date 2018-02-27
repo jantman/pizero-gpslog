@@ -36,6 +36,10 @@ class NoFixError(Exception):
     pass
 
 
+class NoActiveGpsError(Exception):
+    pass
+
+
 class GpsResponse(object):
     """ Class representing geo information returned by GPSD
 
@@ -106,7 +110,7 @@ class GpsResponse(object):
         result = cls()
         result._raw_response = packet
         if not packet['active']:
-            raise UserWarning('GPS not active')
+            raise NoActiveGpsError("No active GPS.")
         last_tpv = packet['tpv'][-1]
         last_sky = packet['sky'][-1]
 
