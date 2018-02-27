@@ -73,9 +73,9 @@ class Installer(object):
             fh.write(self.unit_file)
         logger.info('systemd unit file written to: %s', unitpath)
         logger.info('Running "%s daemon-reload"' % self._systemctl)
-        run(self._systemctl, 'daemon-reload', check=True)
+        run([self._systemctl, 'daemon-reload'], check=True)
         logger.info('Running "%s enable pizero-gpslog"' % self._systemctl)
-        run(self._systemctl, 'enable', 'pizero-gpslog', check=True)
+        run([self._systemctl, 'enable', 'pizero-gpslog'], check=True)
         logger.info('Installation complete. Service enabled.')
 
     @property
