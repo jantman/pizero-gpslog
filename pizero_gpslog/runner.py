@@ -97,11 +97,11 @@ class GpsLogger(object):
                 if packet.mode == 2:
                     # 2D Fix
                     logger.info(packet)
-                    self.LED1.blink(on_time=0.5, off_time=0.5, n=2)
+                    self.LED1.blink(on_time=0.5, off_time=0.25, n=2)
                 elif packet.mode == 3:
                     # 3D Fix
                     logger.info(packet)
-                    self.LED1.blink(on_time=0.5, off_time=0.5, n=1)
+                    self.LED1.blink(on_time=0.5, off_time=0.25, n=1)
                 fh.write('%s\n' % json.dumps(packet.raw_packet))
                 if self.flush_file:
                     fh.flush()
