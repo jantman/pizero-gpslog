@@ -27,25 +27,9 @@ import json
 import logging
 import datetime
 
-gpsd_socket = None
-gpsd_stream = None
-state = {}
 gpsTimeFormat = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 logger = logging.getLogger(__name__)
-
-
-def _parse_state_packet(json_data):
-    global state
-    if json_data['class'] == 'DEVICES':
-        if not json_data['devices']:
-            logger.warn('No gps devices found')
-        state['devices'] = json_data
-    elif json_data['class'] == 'WATCH':
-        state['watch'] = json_data
-    else:
-        raise Exception(
-            "Unexpected message received from gps: {}".format(json_data['class']))
 
 
 class NoFixError(Exception):
@@ -110,6 +94,7 @@ class GpsResponse(object):
         self.climb = 0
         self.time = ''
         self.error = {}
+        self._raw_response = {}
 
     @classmethod
     def from_json(cls, packet):
@@ -119,6 +104,7 @@ class GpsResponse(object):
         :return: GpsResponse
         """
         result = cls()
+        result._raw_response = packet
         if not packet['active']:
             raise UserWarning('GPS not active')
         last_tpv = packet['tpv'][-1]
@@ -257,6 +243,16 @@ class GpsResponse(object):
 
         return time
 
+    @property
+    def raw_packet(self):
+        """
+        Return the deserialized gpsd response, unaltered.
+
+        :return: gpsd response, deserialized from JSON
+        :rtype: dict
+        """
+        return self._raw_response
+
     def __repr__(self):
         modes = {
             0: 'No mode',
@@ -274,57 +270,74 @@ class GpsResponse(object):
             )
 
 
-def connect(host="127.0.0.1", port=2947):
-    """ Connect to a GPSD instance
-    :param host: hostname for the GPSD server
-    :param port: port for the GPSD server
-    """
-    global gpsd_socket, gpsd_stream, verbose_output, state
-    logger.debug("Connecting to gpsd socket at {}:{}".format(host, port))
-    gpsd_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    gpsd_socket.connect((host, port))
-    gpsd_stream = gpsd_socket.makefile(mode="rw")
-    logger.debug("Waiting for welcome message")
-    welcome_raw = gpsd_stream.readline()
-    welcome = json.loads(welcome_raw)
-    if welcome['class'] != "VERSION":
-        raise Exception(
-            "Unexpected data received as welcome. Is the server a gpsd 3 "
-            "server?"
-        )
-    logger.debug("Enabling gps")
-    gpsd_stream.write('?WATCH={"enable":true}\n')
-    gpsd_stream.flush()
+class GpsClient(object):
 
-    for i in range(0, 2):
-        raw = gpsd_stream.readline()
-        parsed = json.loads(raw)
-        _parse_state_packet(parsed)
+    def __init__(self, host="127.0.0.1", port=2947):
+        """ Connect to a GPSD instance
+        :param host: hostname for the GPSD server
+        :param port: port for the GPSD server
+        """
+        self._state = {}
+        logger.debug("Connecting to gpsd socket at {}:{}".format(host, port))
+        self._gpsd_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._gpsd_socket.connect((host, port))
+        self._gpsd_stream = self._gpsd_socket.makefile(mode="rw")
+        logger.debug("Waiting for welcome message")
+        welcome_raw = self._gpsd_stream.readline()
+        welcome = json.loads(welcome_raw)
+        if welcome['class'] != "VERSION":
+            raise Exception(
+                "Unexpected data received as welcome. Is the server a gpsd 3 "
+                "server? (Data: %s)" % welcome_raw
+            )
+        logger.debug("Enabling gps")
+        self._gpsd_stream.write('?WATCH={"enable":true}\n')
+        self._gpsd_stream.flush()
 
+        for i in range(0, 2):
+            raw = self._gpsd_stream.readline()
+            parsed = json.loads(raw)
+            self._parse_state_packet(parsed)
 
-def get_current():
-    """ Poll gpsd for a new position
-    :return: GpsResponse
-    """
-    global gpsd_stream, verbose_output
-    logger.debug("Polling gps")
-    gpsd_stream.write("?POLL;\n")
-    gpsd_stream.flush()
-    raw = gpsd_stream.readline()
-    response = json.loads(raw)
-    if response['class'] != 'POLL':
-        raise Exception(
-            "Unexpected message received from gps: {}".format(response['class']))
-    return GpsResponse.from_json(response)
+    def _parse_state_packet(self, json_data):
+        if json_data['class'] == 'DEVICES':
+            if not json_data['devices']:
+                logger.warning('No gps devices found')
+            self._state['devices'] = json_data
+        elif json_data['class'] == 'WATCH':
+            self._state['watch'] = json_data
+        else:
+            raise Exception(
+                "Unexpected message received from gps: {}".format(
+                    json_data['class']
+                )
+            )
 
+    @property
+    def current_fix(self):
+        """ Poll gpsd for a new position
+        :return: GpsResponse
+        """
+        logger.debug("Polling gps")
+        self._gpsd_stream.write("?POLL;\n")
+        self._gpsd_stream.flush()
+        raw = self._gpsd_stream.readline()
+        response = json.loads(raw)
+        if response['class'] != 'POLL':
+            raise Exception(
+                "Unexpected message received from gps: {}".format(
+                    response['class']
+                )
+            )
+        return GpsResponse.from_json(response)
 
-def device():
-    """ Get information about current gps device
-    :return: dict
-    """
-    global state
-    return {
-        'path': state['devices']['devices'][0]['path'],
-        'speed': state['devices']['devices'][0]['bps'],
-        'driver': state['devices']['devices'][0]['driver']
-    }
+    @property
+    def device(self):
+        """ Get information about current gps device
+        :return: dict
+        """
+        return {
+            'path': self._state['devices']['devices'][0]['path'],
+            'speed': self._state['devices']['devices'][0]['bps'],
+            'driver': self._state['devices']['devices'][0]['driver']
+        }

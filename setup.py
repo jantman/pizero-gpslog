@@ -42,8 +42,6 @@ with open('README.rst') as file:
     long_description = file.read()
 
 requires = [
-    'gps3==0.33.3',
-    'systemd',
     'gpiozero'
 ]
 

@@ -35,22 +35,14 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-import sys
 import os
 import logging
-import signal
-import threading
+import time
+import json
+from datetime import datetime
+import atexit
 
-from pizero_gpslog.gpsdata import GpsData
-from pizero_gpslog.gpsreader import GpsReader
-from pizero_gpslog.filewriter import FileWriter
-from pizero_gpslog.ledthread import LedController
-
-if os.environ.get('USE_SYSTEMD_DAEMON', '') != 'false':
-    USE_SYSTEMD = True
-    from systemd.daemon import notify, Notification
-else:
-    USE_SYSTEMD = False
+from pizero_gpslog.gpsd import GpsClient, GpsResponse
 
 if 'LED_PIN_RED' in os.environ and 'LED_PIN_GREEN' in os.environ:
     from gpiozero import LED
@@ -60,61 +52,60 @@ else:
 logger = logging.getLogger(__name__)
 
 
-class InterruptHandler(object):
-
-    def __init__(self, stopper, worker_list):
-        self.stopper = stopper
-        self.workers = worker_list
-
-    def __call__(self, signum, frame):
-        self.stopper.set()
-        for worker in self.workers:
-            worker.join()
-        if USE_SYSTEMD:
-            notify(Notification.STOPPING)
-        raise SystemExit(0)
-
-
 class GpsLogger(object):
 
     def __init__(self):
-        self._stopper = False
+        led_1_pin = int(os.environ.get('LED_PIN_RED', '-1'))
+        logger.info('Initializing LED1 (Red) on pin %d', led_1_pin)
+        self.LED1 = LED(led_1_pin)
+        led_2_pin = int(os.environ.get('LED_PIN_GREEN', '-2'))
+        logger.info('Initializing LED2 (Green) on pin %d', led_2_pin)
+        self.LED2 = LED(led_2_pin)
+        self.LED2.on()
+        logger.info('Connecting to gpsd')
+        self.gps = GpsClient()
+        self.interval_sec = int(os.environ.get('GPS_INTERVAL_SEC', '5'))
+        logger.info('Sleeping %s seconds between writes', self.interval_sec)
+        self.flush_file = os.environ.get('FLUSH_FILE', '') != 'false'
+        self.outdir = os.path.abspath(os.environ.get('OUT_DIR', os.getcwd()))
+        logger.debug('Writing logs in: %s', self.outdir)
 
     def run(self):
-        data = GpsData()
-        datalock = threading.Lock()
-        stopper = threading.Event()
-
-        # create threads
-        logger.debug('Initializing thread classes')
-        reader = GpsReader(stopper, data, datalock)
-        writer = FileWriter(stopper, data, datalock)
-        led_1_pin = int(os.environ.get('LED_PIN_RED', '-1'))
-        led_2_pin = int(os.environ.get('LED_PIN_GREEN', '-2'))
-        logger.debug(
-            'LEDs using class %s; pins %s and %s',
-            LED.__name__, led_1_pin, led_2_pin
+        outfile = os.path.join(
+            self.outdir, '%s.out' % datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         )
-        leds = LedController(stopper, data, datalock, LED, led_1_pin, led_2_pin)
-
-        # setup signal handler
-        logger.debug('Setting up signal handler')
-        ih = InterruptHandler(stopper, [reader, writer, leds])
-        signal.signal(signal.SIGINT, ih)
-
-        # start threads
-        logger.debug('Starting threads')
-        reader.start()
-        writer.start()
-        leds.start()
-
-        if USE_SYSTEMD:
-            notify(Notification.READY)
-
-        # wait for work to complete, or interrupt
-        reader.join()
-        # finish all threads
-        ih(None, None)
+        logger.info('Writing output to: %s', outfile)
+        with open(outfile, 'w') as fh:
+            self.LED2.off()
+            while True:
+                time.sleep(self.interval_sec)
+                logger.debug('Reading current position from gpsd')
+                packet = self.gps.current_fix
+                if packet.mode == 0:
+                    logger.warning(
+                        'No data returned by gpsd (no active GPS) - %s',
+                        packet
+                    )
+                    self.LED1.on()
+                    continue
+                if self.LED1.is_lit:
+                    self.LED1.off()
+                if packet.mode == 1:
+                    logger.warning('No GPS fix yet - %s', packet)
+                    self.LED1.blink(on_time=0.1, off_time=0.1, n=3)
+                    continue
+                if packet.mode == 2:
+                    # 2D Fix
+                    logger.info(packet)
+                    self.LED1.blink(on_time=0.5, off_time=0.5, n=2)
+                elif packet.mode == 3:
+                    # 3D Fix
+                    logger.info(packet)
+                    self.LED1.blink(on_time=0.5, off_time=0.5, n=1)
+                fh.write('%s\n' % json.dumps(packet.raw_packet))
+                if self.flush_file:
+                    fh.flush()
+                self.LED2.blink(on_time=0.25, off_time=0.25, n=1)
 
 
 def set_log_info(logger):

@@ -44,29 +44,34 @@ class FakeLed(object):
 
     def __init__(self, pin_num, **kwargs):
         self.pin_num = pin_num
+        self._lit = False
 
     def on(self):
         logger.warning('%s ON' % self)
+        self._lit = True
 
     def off(self):
         logger.warning('%s OFF' % self)
+        self._lit = False
 
     def blink(self, on_time=1, off_time=1, n=None, background=True):
         if n is None:
             raise RuntimeError('ERROR: method would never return!')
-        if background:
+        if not background:
             raise RuntimeError(
-                'ERROR: Trying to blink in background from thread!'
+                'ERROR: LED.blink not called from background!'
             )
         logger.warning('%s BLINK on=%s off=%s n=%s background=%s',
                        self, on_time, off_time, n, background)
+        self._lit = False
 
     def toggle(self):
         logger.warning('%s TOGGLE' % self)
+        self._lit = not self._lit
 
     @property
     def is_lit(self):
-        raise NotImplementedError()
+        return self._lit
 
     @property
     def pin(self):

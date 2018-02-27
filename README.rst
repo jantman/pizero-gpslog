@@ -14,10 +14,9 @@ I'll be using `gpsd <http://www.catb.org/gpsd/>`_ to interact with the GPS itsel
 
 The intended feature set is:
 
-* Read GPS data from gpsd and cache it, possibly averaging the speed readings.
-* Write the most recent GPS data to disk (flash memory) at a user-defined interval. Time flushes to minimize power usage.
+* Write the most recent GPS data from gpsd to disk (flash memory) at a user-defined interval.
+* Time disk flushes to minimize power usage.
 * Maintain status LEDs for quick visual status check.
-* Make daemon notifications to systemd as appropriate.
 
 Requirements
 ------------
@@ -49,14 +48,33 @@ Configuration
 pizero-gpslog's entire configuration is provided via environment variables. There are NO command-line switches.
 
 * ``LOG_LEVEL`` - Defaults to "WARNING"; other accepted values are "INFO" and "DEBUG". All logging is to STDOUT.
-* ``USE_SYSTEMD_DAEMON`` - Set to "false" to disable systemd daemon notifications.
-* ``LED_PIN_RED`` - Specifies the GPIO pin number used for the primary ("red") LED. Leave unset if running on non-RPi hardware.
-* ``LED_PIN_GREEN`` - Specifies the GPIO pin number used for the secondary ("green") LED. Leave unset if running on non-RPi hardware.
+* ``LED_PIN_RED`` - Integer. Specifies the GPIO pin number used for the primary ("red") LED. Leave unset if running on non-RPi hardware.
+* ``LED_PIN_GREEN`` - Integer. Specifies the GPIO pin number used for the secondary ("green") LED. Leave unset if running on non-RPi hardware.
+* ``GPS_INTERVAL_SEC`` - Integer. Interval to poll gps at, and write gps position. Defaults to every 5 seconds.
+* ``FLUSH_FILE`` - String. If set to "false", do not explicitly flush output file after every write.
+* ``OUT_DIR`` - Directory to write log files under. If not set, will use current working directory.
 
 Running
 -------
 
 Configure as described above, then run ``pizero-gpslog``.
+
+LED Outputs
++++++++++++
+
+* Green Solid (at start) - connecting to gpsd. Green LED goes out when connected to gpsd and the output file is opened for writing.
+* Red Solid - no active GPS (gpsd does not yet have an active gps, or no GPS is connected).
+* Red 3 Fast Blinks (0.1 sec) - GPS is connected but does not yet have a fix.
+* Red 2 Slow Blinks (0.5 sec) - GPS has a 2D-only fix; position data is being read.
+* Red 1 Slow Blink (0.5s) - GPS has a 3D fix; position data is being read.
+* Green Blink (0.25s) - Data point written to disk (and flushed, if flush not disabled).
+
+Log Files
++++++++++
+
+Log files will be written under the directory specified by the ``OUT_DIR`` environment variable, or the current working directory if that environment variable is not set. Log files will be written under that directory, named according to the time and date when the program started (``%Y-%m-%d_%H-%M-%S`` format).
+
+Each line of the output file is a single raw gpsd response to the ``?POLL`` command. While this program also decodes the responses, it doesn't make sense for us to invent our own data structure for something that already has one. Each line in the output file should be valid JSON matching the `gpsd JSON ?POLL response schema <http://www.catb.org/gpsd/gpsd_json.html>`_, deserialized and reserialized to ensure that it does not contain any linebreaks.
 
 Testing
 -------
@@ -64,3 +82,10 @@ Testing
 There currently aren't any code tests. But there are some scripts and tox-based helpers to aid with manual testing.
 
 * ``pizero_gpslog/tests/data/runfake.sh`` - Runs `gpsfake <http://www.catb.org/gpsd/gpsfake.html>`_ (provided by gpsd) with sample data. Takes optional arguments for ``--nofix`` (data with no GPS fix) or ``--stillfix`` (fix but not moving).
+
+Acknowledgements
+----------------
+
+First, many thanks to the developers of gpsd, who have put forth the massive effort to make a script like this relatively trivial.
+
+Second, thanks to `Martijn Braam <https://github.com/MartijnBraam>`_, developer of the MIT-licensed `gpsd-py3 <https://github.com/MartijnBraam/gpsd-py3>`_ package. A modified version of that package makes up the ``gpsd.py`` module.
