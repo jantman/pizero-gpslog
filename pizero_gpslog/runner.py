@@ -41,7 +41,9 @@ import time
 import json
 from datetime import datetime
 
-from pizero_gpslog.gpsd import GpsClient, NoActiveGpsError, NoFixError
+from pizero_gpslog.gpsd import (
+    GpsClient, NoActiveGpsError, NoFixError, GpsResponse
+)
 
 if 'LED_PIN_RED' in os.environ and 'LED_PIN_GREEN' in os.environ:
     from gpiozero import LED
@@ -82,8 +84,10 @@ class GpsLogger(object):
                 try:
                     packet = self.gps.current_fix
                 except NoActiveGpsError:
+                    packet = GpsResponse()
                     packet.mode = 0
                 except NoFixError:
+                    packet = GpsResponse()
                     packet.mode = 1
                 if packet.mode == 0:
                     logger.warning(
