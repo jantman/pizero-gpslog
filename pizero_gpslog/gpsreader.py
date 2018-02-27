@@ -35,48 +35,48 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-from setuptools import setup, find_packages
-from pizero_gpslog.version import VERSION, PROJECT_URL
+import os
+import logging
+import threading
+import time
 
-with open('README.rst') as file:
-    long_description = file.read()
+from pizero_gpslog.gpsd_gps.gps import gps
 
-requires = [
-    'gps3==0.33.3',
-    'systemd',
-    'gpiozero'
-]
+if os.environ.get('USE_SYSTEMD_DAEMON', '') != 'false':
+    USE_SYSTEMD = True
+    from systemd.daemon import notify, Notification
+else:
+    USE_SYSTEMD = False
 
-classifiers = [
-    'Development Status :: 3 - Alpha',
-    'Environment :: No Input/Output (Daemon)',
-    'Intended Audience :: End Users/Desktop',
-    'Natural Language :: English',
-    'Operating System :: POSIX :: Linux',
-    'Topic :: Other/Nonlisted Topic',
-    'Topic :: System :: Logging',
-    'Topic :: Utilities',
-    'License :: OSI Approved :: GNU Affero General Public License '
-    'v3 or later (AGPLv3+)',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-]
+logger = logging.getLogger(__name__)
 
-setup(
-    name='pizero-gpslog',
-    version=VERSION,
-    author='Jason Antman',
-    author_email='jason@jasonantman.com',
-    packages=find_packages(),
-    url=PROJECT_URL,
-    description='Raspberry Pi Zero gpsd logger with status LEDs.',
-    long_description=long_description,
-    install_requires=requires,
-    entry_points="""
-    [console_scripts]
-    pizero-gpslog = pizero_gpslog.runner:main
-    """,
-    keywords="raspberry pi rpi gps log logger gpsd",
-    classifiers=classifiers
-)
+
+class GpsReader(threading.Thread):
+
+    def __init__(self, stopper, data, datalock):
+        """
+        Thread that handles actually reading data from the GPS.
+
+        :param stopper: Event used to signal when threads should clean up
+          and exit
+        :type stopper: threading.Event
+        :param data: thread-shared instance that stores GPS data
+        :type data: pizero_gpslog.gpsdata.GpsData
+        :param datalock: Lock for accessing data
+        :type datalock: threading.Lock
+        """
+        super(GpsReader, self).__init__()
+        self.data = data
+        self.datalock = datalock
+        self.stopper = stopper
+
+    def run(self):
+        while not self.stopper.is_set():
+            t = time.time()
+            logger.info('Set data to: %s', t)
+            with self.datalock:
+                self.data.set(t)
+            if USE_SYSTEMD:
+                notify(Notification.STATUS, "GpsReader running")
+            time.sleep(1)
+        logger.warning('GpsReader thread got exit event.')

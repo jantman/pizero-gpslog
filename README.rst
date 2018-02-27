@@ -17,6 +17,7 @@ The intended feature set is:
 * Read GPS data from gpsd and cache it, possibly averaging the speed readings.
 * Write the most recent GPS data to disk (flash memory) at a user-defined interval. Time flushes to minimize power usage.
 * Maintain status LEDs for quick visual status check.
+* Make daemon notifications to systemd as appropriate.
 
 Requirements
 ------------
@@ -38,12 +39,24 @@ TBD.
 Software
 ++++++++
 
-TBD.
+1. Setup Raspbian.
+2. ``apt-get install build-essential libsystemd-journal-dev libsystemd-daemon-dev libsystemd-dev python35``
+3. Something.
 
 Configuration
 -------------
 
-TBD.
+pizero-gpslog's entire configuration is provided via environment variables. There are NO command-line switches.
+
+* ``LOG_LEVEL`` - Defaults to "WARNING"; other accepted values are "INFO" and "DEBUG". All logging is to STDOUT.
+* ``USE_SYSTEMD_DAEMON`` - Set to "false" to disable systemd daemon notifications.
+* ``LED_PIN_RED`` - Specifies the GPIO pin number used for the primary ("red") LED. Leave unset if running on non-RPi hardware.
+* ``LED_PIN_GREEN`` - Specifies the GPIO pin number used for the secondary ("green") LED. Leave unset if running on non-RPi hardware.
+
+Running
+-------
+
+Configure as described above, then run ``pizero-gpslog``.
 
 Testing
 -------

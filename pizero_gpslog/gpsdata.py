@@ -35,48 +35,19 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-from setuptools import setup, find_packages
-from pizero_gpslog.version import VERSION, PROJECT_URL
+from copy import copy
 
-with open('README.rst') as file:
-    long_description = file.read()
 
-requires = [
-    'gps3==0.33.3',
-    'systemd',
-    'gpiozero'
-]
+class GpsData(object):
+    """
+    Class to hold shared GPS Data state between threads.
+    """
 
-classifiers = [
-    'Development Status :: 3 - Alpha',
-    'Environment :: No Input/Output (Daemon)',
-    'Intended Audience :: End Users/Desktop',
-    'Natural Language :: English',
-    'Operating System :: POSIX :: Linux',
-    'Topic :: Other/Nonlisted Topic',
-    'Topic :: System :: Logging',
-    'Topic :: Utilities',
-    'License :: OSI Approved :: GNU Affero General Public License '
-    'v3 or later (AGPLv3+)',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-]
+    def __init__(self):
+        self._update_time = None
 
-setup(
-    name='pizero-gpslog',
-    version=VERSION,
-    author='Jason Antman',
-    author_email='jason@jasonantman.com',
-    packages=find_packages(),
-    url=PROJECT_URL,
-    description='Raspberry Pi Zero gpsd logger with status LEDs.',
-    long_description=long_description,
-    install_requires=requires,
-    entry_points="""
-    [console_scripts]
-    pizero-gpslog = pizero_gpslog.runner:main
-    """,
-    keywords="raspberry pi rpi gps log logger gpsd",
-    classifiers=classifiers
-)
+    def set(self, foo):
+        self._update_time = foo
+
+    def getcopy(self):
+        return copy(self._update_time)

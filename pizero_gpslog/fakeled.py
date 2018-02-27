@@ -35,48 +35,42 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-from setuptools import setup, find_packages
-from pizero_gpslog.version import VERSION, PROJECT_URL
+import logging
 
-with open('README.rst') as file:
-    long_description = file.read()
+logger = logging.getLogger(__name__)
 
-requires = [
-    'gps3==0.33.3',
-    'systemd',
-    'gpiozero'
-]
 
-classifiers = [
-    'Development Status :: 3 - Alpha',
-    'Environment :: No Input/Output (Daemon)',
-    'Intended Audience :: End Users/Desktop',
-    'Natural Language :: English',
-    'Operating System :: POSIX :: Linux',
-    'Topic :: Other/Nonlisted Topic',
-    'Topic :: System :: Logging',
-    'Topic :: Utilities',
-    'License :: OSI Approved :: GNU Affero General Public License '
-    'v3 or later (AGPLv3+)',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-]
+class FakeLed(object):
 
-setup(
-    name='pizero-gpslog',
-    version=VERSION,
-    author='Jason Antman',
-    author_email='jason@jasonantman.com',
-    packages=find_packages(),
-    url=PROJECT_URL,
-    description='Raspberry Pi Zero gpsd logger with status LEDs.',
-    long_description=long_description,
-    install_requires=requires,
-    entry_points="""
-    [console_scripts]
-    pizero-gpslog = pizero_gpslog.runner:main
-    """,
-    keywords="raspberry pi rpi gps log logger gpsd",
-    classifiers=classifiers
-)
+    def __init__(self, pin_num, **kwargs):
+        self.pin_num = pin_num
+
+    def on(self):
+        logger.warning('%s ON' % self)
+
+    def off(self):
+        logger.warning('%s OFF' % self)
+
+    def blink(self, on_time=1, off_time=1, n=None, background=True):
+        if n is None:
+            raise RuntimeError('ERROR: method would never return!')
+        if background:
+            raise RuntimeError(
+                'ERROR: Trying to blink in background from thread!'
+            )
+        logger.warning('%s BLINK on=%s off=%s n=%s background=%s',
+                       self, on_time, off_time, n, background)
+
+    def toggle(self):
+        logger.warning('%s TOGGLE' % self)
+
+    @property
+    def is_lit(self):
+        raise NotImplementedError()
+
+    @property
+    def pin(self):
+        return self.pin_num
+
+    def __repr__(self):
+        return '<FakeLed pin_num=%d>' % self.pin_num

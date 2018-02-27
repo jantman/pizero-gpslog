@@ -35,48 +35,35 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-from setuptools import setup, find_packages
-from pizero_gpslog.version import VERSION, PROJECT_URL
+import logging
+import threading
+import time
 
-with open('README.rst') as file:
-    long_description = file.read()
+logger = logging.getLogger(__name__)
 
-requires = [
-    'gps3==0.33.3',
-    'systemd',
-    'gpiozero'
-]
 
-classifiers = [
-    'Development Status :: 3 - Alpha',
-    'Environment :: No Input/Output (Daemon)',
-    'Intended Audience :: End Users/Desktop',
-    'Natural Language :: English',
-    'Operating System :: POSIX :: Linux',
-    'Topic :: Other/Nonlisted Topic',
-    'Topic :: System :: Logging',
-    'Topic :: Utilities',
-    'License :: OSI Approved :: GNU Affero General Public License '
-    'v3 or later (AGPLv3+)',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-]
+class FileWriter(threading.Thread):
 
-setup(
-    name='pizero-gpslog',
-    version=VERSION,
-    author='Jason Antman',
-    author_email='jason@jasonantman.com',
-    packages=find_packages(),
-    url=PROJECT_URL,
-    description='Raspberry Pi Zero gpsd logger with status LEDs.',
-    long_description=long_description,
-    install_requires=requires,
-    entry_points="""
-    [console_scripts]
-    pizero-gpslog = pizero_gpslog.runner:main
-    """,
-    keywords="raspberry pi rpi gps log logger gpsd",
-    classifiers=classifiers
-)
+    def __init__(self, stopper, data, datalock):
+        """
+        Thread that handles writing data to disk.
+
+        :param stopper: Event used to signal when threads should clean up
+          and exit
+        :type stopper: threading.Event
+        :param data: thread-shared instance that stores GPS data
+        :type data: pizero_gpslog.gpsdata.GpsData
+        :param datalock: Lock for accessing data
+        :type datalock: threading.Lock
+        """
+        super(FileWriter, self).__init__()
+        self.data = data
+        self.datalock = datalock
+        self.stopper = stopper
+
+    def run(self):
+        while not self.stopper.is_set():
+            with self.datalock:
+                logger.warning('GpsData: %s', self.data._update_time)
+            time.sleep(3)
+        logger.warning('FileWriter thread got exit event.')

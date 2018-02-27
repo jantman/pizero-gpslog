@@ -2,29 +2,26 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="94652e4b-72f6-4004-a3c4-d64437644ded" name="Default" comment="">
-      <change beforePath="" afterPath="$PROJECT_DIR$/.coveragerc" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/CHANGES.rst" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/MANIFEST.in" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/data/gpsd/COPYING" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/data/gpsd/README.rst" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/data/gpsd/bu303-climbing.log" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/data/gpsd/bu303-climbing.log.chk" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/data/gpsd/bu303-moving.log" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/data/gpsd/bu303-moving.log.chk" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/data/gpsd/bu303-nofix.log" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/data/gpsd/bu303-nofix.log.chk" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/data/gpsd/bu303-stillfix.log" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/data/gpsd/bu303-stillfix.log.chk" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/data/gpsd/bu353s4.log" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/data/gpsd/bu353s4.log.chk" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/pytest.ini" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/setup.cfg" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change beforePath="$PROJECT_DIR$/.idea/pizero-gpslog.iml" afterPath="$PROJECT_DIR$/.idea/pizero-gpslog.iml" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/fakeled.py" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/filewriter.py" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/gpsd_gps/COPYING" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/gpsd_gps/README.rst" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/gpsd_gps/__init__.py" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/gpsd_gps/client.py" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/gpsd_gps/fake.py" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/gpsd_gps/gps.py" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/gpsd_gps/misc.py" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/gpsdata.py" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/gpsreader.py" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/ledthread.py" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/pizero_gpslog/runner.py" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/LICENSE" afterPath="$PROJECT_DIR$/LICENSE" />
       <change beforePath="$PROJECT_DIR$/README.rst" afterPath="$PROJECT_DIR$/README.rst" />
+      <change beforePath="$PROJECT_DIR$/pizero_gpslog/__init__.py" afterPath="$PROJECT_DIR$/pizero_gpslog/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/pizero_gpslog/tests/__init__.py" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/__init__.py" />
+      <change beforePath="$PROJECT_DIR$/pizero_gpslog/tests/test_version.py" afterPath="$PROJECT_DIR$/pizero_gpslog/tests/test_version.py" />
+      <change beforePath="$PROJECT_DIR$/pizero_gpslog/version.py" afterPath="$PROJECT_DIR$/pizero_gpslog/version.py" />
+      <change beforePath="$PROJECT_DIR$/setup.py" afterPath="$PROJECT_DIR$/setup.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -35,27 +32,93 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="README.rst" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/README.rst">
+      <file leaf-file-name="runfake.sh" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pizero_gpslog/tests/data/runfake.sh">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="728">
-              <caret line="51" column="0" lean-forward="true" selection-start-line="51" selection-start-column="0" selection-end-line="51" selection-end-column="0" />
+            <state relative-caret-position="450">
+              <caret line="25" column="0" lean-forward="false" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="runfake.sh" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/pizero_gpslog/tests/data/runfake.sh">
+      <file leaf-file-name="README.rst" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/README.rst">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="450">
-              <caret line="25" column="0" lean-forward="true" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
+            <state relative-caret-position="440">
+              <caret line="47" column="0" lean-forward="false" selection-start-line="47" selection-start-column="0" selection-end-line="47" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="runner.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/pizero_gpslog/runner.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-194">
+              <caret line="61" column="0" lean-forward="true" selection-start-line="61" selection-start-column="0" selection-end-line="61" selection-end-column="0" />
+              <folding>
+                <element signature="e#1831#1841#0" expanded="true" />
+                <element signature="e#4067#4268#0" expanded="false" />
+                <element signature="e#4302#4601#0" expanded="false" />
+                <element signature="e#4657#5066#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ledthread.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pizero_gpslog/ledthread.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="742">
+              <caret line="81" column="0" lean-forward="true" selection-start-line="81" selection-start-column="0" selection-end-line="81" selection-end-column="0" />
+              <folding>
+                <element signature="e#1831#1845#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="gpsdata.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pizero_gpslog/gpsdata.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="796">
+              <caret line="53" column="0" lean-forward="false" selection-start-line="53" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="filewriter.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pizero_gpslog/filewriter.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="166">
+              <caret line="37" column="0" lean-forward="false" selection-start-line="37" selection-start-column="0" selection-end-line="68" selection-end-column="59" />
+              <folding>
+                <element signature="e#1831#1845#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="gpsreader.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pizero_gpslog/gpsreader.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="238">
+              <caret line="41" column="0" lean-forward="true" selection-start-line="41" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
     </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -65,11 +128,24 @@
       <list>
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/tox.ini" />
-        <option value="$PROJECT_DIR$/setup.py" />
         <option value="$PROJECT_DIR$/pizero_gpslog/tests/data/gpsd/README.rst" />
         <option value="$PROJECT_DIR$/.gitignore" />
-        <option value="$PROJECT_DIR$/README.rst" />
         <option value="$PROJECT_DIR$/pizero_gpslog/tests/data/runfake.sh" />
+        <option value="$PROJECT_DIR$/pizero_gpslog/version.py" />
+        <option value="$PROJECT_DIR$/pizero_gpslog/__init__.py" />
+        <option value="$PROJECT_DIR$/pizero_gpslog/tests/test_version.py" />
+        <option value="$PROJECT_DIR$/pizero_gpslog/tests/__init__.py" />
+        <option value="$PROJECT_DIR$/pizero_gpslog/leds.py" />
+        <option value="$PROJECT_DIR$/pizero_gpslog/tests/gpsdata.py" />
+        <option value="$PROJECT_DIR$/pizero_gpslog/filewriter.py" />
+        <option value="$PROJECT_DIR$/setup.py" />
+        <option value="$PROJECT_DIR$/README.rst" />
+        <option value="$PROJECT_DIR$/pizero_gpslog/fakeled.py" />
+        <option value="$PROJECT_DIR$/pizero_gpslog/gpsdata.py" />
+        <option value="$PROJECT_DIR$/pizero_gpslog/ledthread.py" />
+        <option value="$PROJECT_DIR$/pizero_gpslog/gpsd_gps/README.rst" />
+        <option value="$PROJECT_DIR$/pizero_gpslog/gpsreader.py" />
+        <option value="$PROJECT_DIR$/pizero_gpslog/runner.py" />
       </list>
     </option>
   </component>
@@ -116,22 +192,13 @@
               <item name="pizero-gpslog" type="b2602c69:ProjectViewProjectNode" />
               <item name="pizero-gpslog" type="462c0819:PsiDirectoryNode" />
               <item name="pizero_gpslog" type="462c0819:PsiDirectoryNode" />
-              <item name="tests" type="462c0819:PsiDirectoryNode" />
+              <item name="gpsd_gps" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="pizero-gpslog" type="b2602c69:ProjectViewProjectNode" />
               <item name="pizero-gpslog" type="462c0819:PsiDirectoryNode" />
               <item name="pizero_gpslog" type="462c0819:PsiDirectoryNode" />
               <item name="tests" type="462c0819:PsiDirectoryNode" />
-              <item name="data" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pizero-gpslog" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pizero-gpslog" type="462c0819:PsiDirectoryNode" />
-              <item name="pizero_gpslog" type="462c0819:PsiDirectoryNode" />
-              <item name="tests" type="462c0819:PsiDirectoryNode" />
-              <item name="data" type="462c0819:PsiDirectoryNode" />
-              <item name="gpsd" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -144,6 +211,11 @@
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../biweeklybudget/tox.ini" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pizero_gpslog" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -279,27 +351,10 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/.github/CONTRIBUTING.md" />
-    <entry file="file://$PROJECT_DIR$/pizero_gpslog/version.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="702">
-          <caret line="39" column="0" lean-forward="true" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../biweeklybudget/tox.ini">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-2611">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/setup.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="171">
-          <caret line="46" column="0" lean-forward="true" selection-start-line="46" selection-start-column="0" selection-end-line="46" selection-end-column="0" />
-          <folding>
-            <element signature="e#1831#1874#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -325,10 +380,42 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/README.rst">
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/version.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="728">
-          <caret line="51" column="0" lean-forward="true" selection-start-line="51" selection-start-column="0" selection-end-line="51" selection-end-column="0" />
+        <state relative-caret-position="90">
+          <caret line="5" column="14" lean-forward="false" selection-start-line="5" selection-start-column="14" selection-end-line="5" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="5" column="14" lean-forward="false" selection-start-line="5" selection-start-column="14" selection-end-line="5" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/tests/test_version.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="5" column="14" lean-forward="false" selection-start-line="5" selection-start-column="14" selection-end-line="5" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/tests/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="5" column="14" lean-forward="false" selection-start-line="5" selection-start-column="14" selection-end-line="5" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/setup.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="157">
+          <caret line="46" column="14" lean-forward="true" selection-start-line="46" selection-start-column="14" selection-end-line="46" selection-end-column="14" />
           <folding />
         </state>
       </provider>
@@ -336,8 +423,121 @@
     <entry file="file://$PROJECT_DIR$/pizero_gpslog/tests/data/runfake.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="450">
-          <caret line="25" column="0" lean-forward="true" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
+          <caret line="25" column="0" lean-forward="false" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.rst">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="440">
+          <caret line="47" column="0" lean-forward="false" selection-start-line="47" selection-start-column="0" selection-end-line="47" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/fakeled.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="670">
+          <caret line="62" column="0" lean-forward="true" selection-start-line="62" selection-start-column="0" selection-end-line="62" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/gpsd_gps/README.rst">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="108">
+          <caret line="6" column="0" lean-forward="true" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/gpsd_gps/misc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2970">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/gpsd_gps/fake.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-3564">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/gpsd_gps/client.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/gpsd_gps/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/gpsdata.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="796">
+          <caret line="53" column="0" lean-forward="false" selection-start-line="53" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/filewriter.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="166">
+          <caret line="37" column="0" lean-forward="false" selection-start-line="37" selection-start-column="0" selection-end-line="68" selection-end-column="59" />
+          <folding>
+            <element signature="e#1831#1845#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/gpsreader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="41" column="0" lean-forward="true" selection-start-line="41" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/ledthread.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="742">
+          <caret line="81" column="0" lean-forward="true" selection-start-line="81" selection-start-column="0" selection-end-line="81" selection-end-column="0" />
+          <folding>
+            <element signature="e#1831#1845#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/gpsd_gps/gps.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-5414">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pizero_gpslog/runner.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-194">
+          <caret line="61" column="0" lean-forward="true" selection-start-line="61" selection-start-column="0" selection-end-line="61" selection-end-column="0" />
+          <folding>
+            <element signature="e#1831#1841#0" expanded="true" />
+            <element signature="e#4067#4268#0" expanded="false" />
+            <element signature="e#4302#4601#0" expanded="false" />
+            <element signature="e#4657#5066#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>

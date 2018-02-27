@@ -35,48 +35,47 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-from setuptools import setup, find_packages
-from pizero_gpslog.version import VERSION, PROJECT_URL
+import logging
+import threading
+import time
 
-with open('README.rst') as file:
-    long_description = file.read()
+logger = logging.getLogger(__name__)
 
-requires = [
-    'gps3==0.33.3',
-    'systemd',
-    'gpiozero'
-]
 
-classifiers = [
-    'Development Status :: 3 - Alpha',
-    'Environment :: No Input/Output (Daemon)',
-    'Intended Audience :: End Users/Desktop',
-    'Natural Language :: English',
-    'Operating System :: POSIX :: Linux',
-    'Topic :: Other/Nonlisted Topic',
-    'Topic :: System :: Logging',
-    'Topic :: Utilities',
-    'License :: OSI Approved :: GNU Affero General Public License '
-    'v3 or later (AGPLv3+)',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-]
+class LedController(threading.Thread):
 
-setup(
-    name='pizero-gpslog',
-    version=VERSION,
-    author='Jason Antman',
-    author_email='jason@jasonantman.com',
-    packages=find_packages(),
-    url=PROJECT_URL,
-    description='Raspberry Pi Zero gpsd logger with status LEDs.',
-    long_description=long_description,
-    install_requires=requires,
-    entry_points="""
-    [console_scripts]
-    pizero-gpslog = pizero_gpslog.runner:main
-    """,
-    keywords="raspberry pi rpi gps log logger gpsd",
-    classifiers=classifiers
-)
+    def __init__(self, stopper, data, datalock, led_class, pinA, pinB):
+        """
+        Thread that handles controlling the LEDs.
+
+        :param stopper: Event used to signal when threads should clean up
+          and exit
+        :type stopper: threading.Event
+        :param data: thread-shared instance that stores GPS data
+        :type data: pizero_gpslog.gpsdata.GpsData
+        :param datalock: Lock for accessing data
+        :type datalock: threading.Lock
+        :param led_class: class to use for controlling LEDs
+        :param pinA: primary LED GPIO pin number
+        :type pinA: int
+        :param pinB: secondary LED GPIO pin number
+        :type pinB: int
+        """
+        super(LedController, self).__init__()
+        self.data = data
+        self.datalock = datalock
+        self.stopper = stopper
+        self._led_class = led_class
+        self._pin_a_num = pinA
+        self._pin_b_num = pinB
+
+    def run(self):
+        self.pinA = self._led_class(self._pin_a_num)
+        self.pinB = self._led_class(self._pin_b_num)
+        while not self.stopper.is_set():
+            datacopy = None
+            with self.datalock:
+                datacopy = self.data.getcopy()
+            self.pinA.toggle()
+            time.sleep(10)
+        logger.warning('LedController thread got exit event.')
