@@ -94,7 +94,8 @@ class GpsLogger(object):
                         'No data returned by gpsd (no active GPS) - %s',
                         packet
                     )
-                    self.LED1.on()
+                    if not self.LED1.is_lit:
+                        self.LED1.on()
                     continue
                 if self.LED1.is_lit:
                     self.LED1.off()
