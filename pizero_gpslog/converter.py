@@ -52,7 +52,7 @@ class GpxConverter(object):
         self._in_fpath = input_fpath
         self._out_fpath = output_fpath
 
-    def convert(self):
+    def convert(self, stats=True):
         logs = []
         with open(self._in_fpath, 'r') as fh:
             for line in fh.readlines():
@@ -65,9 +65,33 @@ class GpxConverter(object):
                 if j['tpv'][0].get('mode', 0) < 2:
                     continue
                 logs.append(j)
-        xml = self._gpx_for_logs(logs)
+        gpx = self._gpx_for_logs(logs)
         with open(self._out_fpath, 'w') as fh:
-            fh.write(xml)
+            fh.write(gpx.to_xml())
+        if not stats:
+            return
+        stats = 'GPX file written to: %s\n' % self._out_fpath
+        stats += 'Track Start: %s\n' % gpx.get_time_bounds().start_time
+        stats += 'Track End: %s\n' % gpx.get_time_bounds().end_time
+        stats += 'Track Duration: %s seconds\n' % gpx.get_duration()
+        stats += '%d points in track\n' % gpx.get_points_no()
+        cloned_gpx = gpx.clone()
+        cloned_gpx.reduce_points(2000, min_distance=10)
+        cloned_gpx.smooth(vertical=True, horizontal=True)
+        cloned_gpx.smooth(vertical=True, horizontal=False)
+        moving_time, stopped_time, moving_distance, stopped_distance, \
+            max_speed_ms = cloned_gpx.get_moving_data
+        stats += 'Moving time: %s\n' % moving_time
+        stats += 'Stopped time: %s\n' % stopped_time
+        stats += 'Max Speed: %s m/s\n' % max_speed_ms
+        stats += '2D (Horizontal) distance: %s m\n' % gpx.length_2d()
+        ud = gpx.get_uphill_downhill()
+        stats += 'Total elevation increase: %s m\n' % ud.uphill
+        stats += 'Total elevation decrease: %s m\n' % ud.downhill
+        elev = gpx.get_elevation_extremes()
+        stats += 'Minimum elevation: %s m\n' % elev.minimum
+        stats += 'Maximum elevation: %s m\n' % elev.maximum
+        sys.stderr.write(stats)
 
     def _gpx_for_logs(self, logs):
         g = GPX()
@@ -93,7 +117,7 @@ class GpxConverter(object):
             p.type_of_gpx_fix = '2d' if tpv['mode'] == 2 else '3d'
             p.satellites = len(sky['satellites'])
             seg.points.append(p)
-        return g.to_xml()
+        return g
 
 
 def main(argv=sys.argv[1:]):
@@ -103,7 +127,7 @@ def main(argv=sys.argv[1:]):
             args.output = args.JSON_FILE + '.' + args.format
         else:
             args.output = args.JSON_FILE.rsplit('.', 1)[0] + '.' + args.format
-    GpxConverter(args.JSON_FILE, args.output).convert()
+    GpxConverter(args.JSON_FILE, args.output).convert(stats=args.stats)
 
 
 def parse_args(argv):
@@ -120,6 +144,10 @@ def parse_args(argv):
                    help='Output file path. By default, will be the input '
                         'file path with the file extension replaced with the '
                         'correct one for the output format.')
+    p.add_argument('-S', '--no-stats', dest='stats', action='store_false',
+                   default=True,
+                   help='do not print stats to STDERR'
+    )
     p.add_argument('JSON_FILE', action='store', type=str,
                    help='Input file to convert')
     args = p.parse_args(argv)

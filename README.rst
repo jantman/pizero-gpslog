@@ -101,6 +101,7 @@ Using the Data
 The log files output by ``pizero-gpslog`` are in the `gpsd JSON ?POLL response format <http://www.catb.org/gpsd/gpsd_json.html>`_, one response per line (some responses may be empty). In order to make the output useful, this package also includes the ``pizero-gpslog-convert`` command line tool which can convert a specified JSON file to one of a variety of more-useful formats. While `gpsbabel <https://www.gpsbabel.org/>`_ is the standard for GPS data format conversion, it doesn't support the gpsd POLL response format. This utility is provided as a means of converting to some common GPS data formats. If you need other formats, please convert to one of these and then to gpsbabel.
 
 * ``pizero-gpslog-convert YYYY-MM-DD_HH:MM:SS.json`` - convert ``YYYY-MM-DD_HH:MM:SS.json`` to GPX and write at ``YYYY-MM-DD_HH:MM:SS.gpx``
+* ``pizero-gpslog-convert --stats YYYY-MM-DD_HH:MM:SS.json`` - same as above, but also print some stats to STDERR
 
 Testing
 -------
