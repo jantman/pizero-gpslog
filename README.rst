@@ -30,11 +30,6 @@ Requirements
 Installation
 ------------
 
-Hardware
-++++++++
-
-Plug your GPS into the USB input on the RPi, via a "usb on the go" (USB OTG) cable. Then plug the Pi into a power source. Everything else should be automatic after the installation described below.
-
 Software
 ++++++++
 
@@ -58,6 +53,14 @@ This assumes you're running on Linux...
 9. Run sudo `raspi-config <https://github.com/RPi-Distro/raspi-config>`_ to set things like the locale and timezone. Personally, I usually leave the ``pi`` user password at its default for devices that will never be on an untrusted network.
 10. In ``/home/pi``, run ``git clone https://github.com/jantman/pizero-gpslog.git && cd pizero-gpslog && sudo python3 setup.py develop && sudo pizero-install``. The installer, ``pizero-install``, templates out a systemd unit file, reloads systemd, and enables the unit. Environment variables to set for the service are taken from command line arguments.
 11. If you're ready, ``sudo systemctl start pizero-gpslog`` to start it. Otherwise, it will start on the next boot.
+12. Find out the USB vendor and product IDs for your GPS. My BU-353S4 uses a Prolific PL2303 serial chipset (vendor 067b product 2303) which is disabled by default in the Debian gpsd udev rules. Look at ``/lib/udev/rules.d/60-gpsd.rules``. If your GPS is commented out like mine, uncomment it and save the file.
+
+Hardware
+++++++++
+
+1. Add two LEDs to the Pi Zero. I prefer to solder a female right-angle header to the Pi, then put the LEDs on a male header so they can be removed. gpiozero, the library used for controlling the LEDs, has `pinout diagrams <https://gpiozero.readthedocs.io/en/stable/recipes.html#pin-numbering>`_ and information on the `wiring that the API expects <https://gpiozero.readthedocs.io/en/stable/api_output.html#gpiozero.LED>`_. The code this project uses expects the LEDs to be wired active-high (cathode to ground, anode to GPIO pin through a limiting resistor). I made up a small 8x20 header for my LEDs and (very sloppily) potted them in epoxy.
+2. Test the LEDs.
+3. Plug your GPS into the USB input on the RPi, via a "usb on the go" (USB OTG) cable. Then plug the Pi into a power source. Everything else should be automatic after the installation described below.
 
 Configuration
 -------------
@@ -97,6 +100,11 @@ Getting the Data
 ++++++++++++++++
 
 At the moment, when I'm home from a hike and the Pi is powered down, I just pull the SD card and copy the data to my computer, then delete the data file(s) from the SD card and put it back. It would certainly be easy to automate this with a Pi Zero W or an Ethernet or WiFi connection, but it's not worth it for me for this project. If you're interested, I have some scripts and instructions that might help as part of my `pi2graphite <https://github.com/jantman/pi2graphite>`_ project.
+
+Using the Data
+--------------
+
+TBD.
 
 Testing
 -------
