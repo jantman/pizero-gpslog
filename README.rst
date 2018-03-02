@@ -8,15 +8,9 @@ Introduction and Goals
 
 This is a trivial (and not really "supported") project of mine to couple a Raspberry Pi Zero with a USB GPS receiver and a battery pack to GPS track my hikes. The hardware decision was mainly based on what I had lying around: a Raspberry Pi Zero, a 10,000mAh external battery pack for my cell phone, and a USB GPS (well, I thought I had one, and got far enough into the project when I decided it was missing for good that I bought another).
 
-The goal is to package all of this together into a "small" (but not necessarily lightweight, based on the components) package that I can put in the outside pocket of my hiking pack, and record an accurate and detailed GPS track of my hikes.
+The goal is to package all of this together into a "small" (but not necessarily lightweight, based on the components) package that I can put in the outside pocket of my hiking pack, and record an accurate and detailed GPS track of my hikes. It writes the most recent position data from gpsd to disk at a user-defined interval, flushes IO after each write (so that it's safe to just pull the power on the Pi), and uses two LEDs to indicate status while in the field. Data is written in gpsd's native format, but a conversion tool is provided.
 
-I'll be using `gpsd <http://www.catb.org/gpsd/>`_ to interact with the GPS itself, as it's very mature and stable software, exposes a simple JSON-based socket interface, and also has decent Python bindings. There's no reason for a logger to have to worry about the nuances of GPS communication itself.
-
-The intended feature set is:
-
-* Write the most recent GPS data from gpsd to disk (flash memory) at a user-defined interval.
-* Time disk flushes to minimize power usage.
-* Maintain status LEDs for quick visual status check.
+This program relies on `gpsd <http://www.catb.org/gpsd/>`_ to interact with the GPS itself, as it's very mature and stable software, exposes a simple JSON-based socket interface, and also has decent Python bindings. There's no reason for a logger to have to worry about the nuances of GPS communication itself.
 
 Requirements
 ------------
@@ -51,7 +45,7 @@ This assumes you're running on Linux...
 7. Log in. The default user is named "pi" with a default password of "raspberry".
 8. ``sudo apt-get update && sudo apt-get install haveged git python3-gpiozero python3-setuptools python3-pip gpsd``
 9. Run sudo `raspi-config <https://github.com/RPi-Distro/raspi-config>`_ to set things like the locale and timezone. Personally, I usually leave the ``pi`` user password at its default for devices that will never be on an untrusted network.
-10. In ``/home/pi``, run ``git clone https://github.com/jantman/pizero-gpslog.git && cd pizero-gpslog && sudo python3 setup.py develop && sudo pizero-install``. The installer, ``pizero-install``, templates out a systemd unit file, reloads systemd, and enables the unit. Environment variables to set for the service are taken from command line arguments.
+10. In ``/home/pi``, run ``git clone https://github.com/jantman/pizero-gpslog.git && cd pizero-gpslog && sudo python3 setup.py develop && sudo pizero-gpslog-install``. The installer, ``pizero-gpslog-install``, templates out a systemd unit file, reloads systemd, and enables the unit. Environment variables to set for the service are taken from command line arguments.
 11. If you're ready, ``sudo systemctl start pizero-gpslog`` to start it. Otherwise, it will start on the next boot.
 12. Find out the USB vendor and product IDs for your GPS. My BU-353S4 uses a Prolific PL2303 serial chipset (vendor 067b product 2303) which is disabled by default in the Debian gpsd udev rules. Look at ``/lib/udev/rules.d/60-gpsd.rules``. If your GPS is commented out like mine, uncomment it and save the file.
 
@@ -104,7 +98,9 @@ At the moment, when I'm home from a hike and the Pi is powered down, I just pull
 Using the Data
 --------------
 
-TBD.
+The log files output by ``pizero-gpslog`` are in the `gpsd JSON ?POLL response format <http://www.catb.org/gpsd/gpsd_json.html>`_, one response per line (some responses may be empty). In order to make the output useful, this package also includes the ``pizero-gpslog-convert`` command line tool which can convert a specified JSON file to one of a variety of more-useful formats. While `gpsbabel <https://www.gpsbabel.org/>`_ is the standard for GPS data format conversion, it doesn't support the gpsd POLL response format. This utility is provided as a means of converting to some common GPS data formats. If you need other formats, please convert to one of these and then to gpsbabel.
+
+* ``pizero-gpslog-convert YYYY-MM-DD_HH:MM:SS.json`` - convert ``YYYY-MM-DD_HH:MM:SS.json`` to GPX and write at ``YYYY-MM-DD_HH:MM:SS.gpx``
 
 Testing
 -------
