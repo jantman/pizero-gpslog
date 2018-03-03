@@ -103,6 +103,13 @@ The log files output by ``pizero-gpslog`` are in the `gpsd JSON ?POLL response f
 * ``pizero-gpslog-convert YYYY-MM-DD_HH:MM:SS.json`` - convert ``YYYY-MM-DD_HH:MM:SS.json`` to GPX and write at ``YYYY-MM-DD_HH:MM:SS.gpx``
 * ``pizero-gpslog-convert --stats YYYY-MM-DD_HH:MM:SS.json`` - same as above, but also print some stats to STDERR
 
+It's up to you how to use the data, but there are a number of handy online tools that work with GPX files, including:
+
+* `gpsvisualizer.com <http://www.gpsvisualizer.com/>`_ that has multiple output formats including `elevation and speed profiles <http://www.gpsvisualizer.com/profile_input>`_ (and other profiles including slope, climb rate, pace, etc.), plotting the track `on Google Maps <http://www.gpsvisualizer.com/map_input?form=google>`_ (including with colorization by speed, elevation, slope, climb rate, pace, etc.), converting `to Google Earth KML <http://www.gpsvisualizer.com/map_input?form=googleearth>`_, etc. Plotting can also use sources other than Google Maps, such as OpenStreetMap, ThunderForest, OpenTopoMap, USGS, USFS, etc. (and there's some `explanation <http://www.gpsvisualizer.com/examples/google_custom_backgrounds.html>`_ about how this is done).
+* `utrack.crempa.net <http://utrack.crempa.net/>`_ Takes a GPX file and generates a HTML page "report" giving a map overlay (with optional elevation colorization) as well as elevation and speed profiles (against both time and distance), some statistics, a distance vs time profile, and the option to download that report as a PDF.
+* `sunearthtools.com <https://www.sunearthtools.com/tools/gps-view.php>`_ has a simple tool (admittedly with a poor UI) that plots GPX data on Google maps along with a separate speed and elevation profile (by distance).
+* `mygpsfiles <http://www.mygpsfiles.com/en/>`_ Is a web-based app with a native-looking tiled UI that can plot tracks on Google Maps (Satellite or Map + Topo) as well as displaying per-point statistics (distance, time, elevation, speed, pace) and a configurable profile of elevation, speed, distance, pace, etc. As far as I can tell, all units are metric.
+
 Testing
 -------
 

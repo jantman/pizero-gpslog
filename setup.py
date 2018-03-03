@@ -43,7 +43,8 @@ with open('README.rst') as file:
 
 requires = [
     'gpiozero',
-    'gpxpy'
+    'gpxpy',
+    'pint'
 ]
 
 classifiers = [

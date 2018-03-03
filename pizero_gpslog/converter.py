@@ -38,28 +38,41 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 import sys
 import argparse
 import json
-import re
+
+import pint
 from gpxpy.gpx import GPX, GPXTrack, GPXTrackSegment, GPXTrackPoint
 from gpxpy.gpxfield import TIME_TYPE
-from xml.dom import minidom
 
 from pizero_gpslog.version import VERSION
 
 
 class GpxConverter(object):
 
-    def __init__(self, input_fpath, output_fpath):
+    def __init__(self, input_fpath, output_fpath, imperial=False):
         self._in_fpath = input_fpath
         self._out_fpath = output_fpath
+        self._imperial = imperial
+        self._ureg = pint.UnitRegistry()
 
     def convert(self, stats=True):
         logs = []
         with open(self._in_fpath, 'r') as fh:
+            lineno = 0
             for line in fh.readlines():
+                lineno += 1
                 line = line.strip()
-                if line == '':
+                if len(line) == 0:
                     continue
-                j = json.loads(line)
+                try:
+                    j = json.loads(line)
+                except json.decoder.JSONDecodeError as ex:
+                    sys.stderr.write(
+                        'Unable to decode JSON on line %s; skipping. '
+                        '(ERROR: %s)\n' % (
+                            lineno, ex
+                        )
+                    )
+                    continue
                 if 'tpv' not in j:
                     continue
                 if j['tpv'][0].get('mode', 0) < 2:
@@ -71,26 +84,28 @@ class GpxConverter(object):
         if not stats:
             return
         stats = 'GPX file written to: %s\n' % self._out_fpath
-        stats += 'Track Start: %s\n' % gpx.get_time_bounds().start_time
-        stats += 'Track End: %s\n' % gpx.get_time_bounds().end_time
-        stats += 'Track Duration: %s seconds\n' % gpx.get_duration()
+        stats += 'Track Start: %s UTC\n' % gpx.get_time_bounds().start_time
+        stats += 'Track End: %s UTC\n' % gpx.get_time_bounds().end_time
+        stats += 'Track Duration: %s\n' % seconds(gpx.get_duration())
         stats += '%d points in track\n' % gpx.get_points_no()
         cloned_gpx = gpx.clone()
         cloned_gpx.reduce_points(2000, min_distance=10)
         cloned_gpx.smooth(vertical=True, horizontal=True)
         cloned_gpx.smooth(vertical=True, horizontal=False)
         moving_time, stopped_time, moving_distance, stopped_distance, \
-            max_speed_ms = cloned_gpx.get_moving_data
-        stats += 'Moving time: %s\n' % moving_time
-        stats += 'Stopped time: %s\n' % stopped_time
-        stats += 'Max Speed: %s m/s\n' % max_speed_ms
-        stats += '2D (Horizontal) distance: %s m\n' % gpx.length_2d()
+            max_speed_ms = cloned_gpx.get_moving_data()
+        stats += 'Moving time: %s\n' % seconds(moving_time)
+        stats += 'Stopped time: %s\n' % seconds(stopped_time)
+        stats += 'Max Speed: %s\n' % self._ms_mph(max_speed_ms)
+        stats += '2D (Horizontal) distance: %s\n' % self._m_ftmi(
+            gpx.length_2d()
+        )
         ud = gpx.get_uphill_downhill()
-        stats += 'Total elevation increase: %s m\n' % ud.uphill
-        stats += 'Total elevation decrease: %s m\n' % ud.downhill
+        stats += 'Total elevation increase: %s\n' % self._m_ft(ud.uphill)
+        stats += 'Total elevation decrease: %s\n' % self._m_ft(ud.downhill)
         elev = gpx.get_elevation_extremes()
-        stats += 'Minimum elevation: %s m\n' % elev.minimum
-        stats += 'Maximum elevation: %s m\n' % elev.maximum
+        stats += 'Minimum elevation: %s\n' % self._m_ft(elev.minimum)
+        stats += 'Maximum elevation: %s\n' % self._m_ft(elev.maximum)
         sys.stderr.write(stats)
 
     def _gpx_for_logs(self, logs):
@@ -119,6 +134,38 @@ class GpxConverter(object):
             seg.points.append(p)
         return g
 
+    def _ms_mph(self, n):
+        if not self._imperial:
+            return '%.4f m/s' % n
+        val = n * self._ureg.meter / self._ureg.second
+        return '%.4f MPH' % val.to(self._ureg.mile / self._ureg.hour).magnitude
+
+    def _m_ftmi(self, n):
+        if not self._imperial:
+            return '%.4f m' % n
+        val = n * self._ureg.meter
+        val = val.to(self._ureg.mile)
+        return '%.4f Mi' % val.magnitude
+
+    def _m_ft(self, n):
+        if not self._imperial:
+            return '%.4f m' % n
+        val = n * self._ureg.meter
+        val = val.to(self._ureg.foot)
+        return '%.4f ft' % val.magnitude
+
+
+def seconds(s):
+    res = []
+    if s > 3600:
+        h, s = divmod(s, 3600)
+        res.append('%dh' % h)
+    if s > 60:
+        m, s = divmod(s, 60)
+        res.append('%dm' % m)
+    res.append('%ds' % s)
+    return ' '.join(res)
+
 
 def main(argv=sys.argv[1:]):
     args = parse_args(argv)
@@ -127,7 +174,9 @@ def main(argv=sys.argv[1:]):
             args.output = args.JSON_FILE + '.' + args.format
         else:
             args.output = args.JSON_FILE.rsplit('.', 1)[0] + '.' + args.format
-    GpxConverter(args.JSON_FILE, args.output).convert(stats=args.stats)
+    GpxConverter(args.JSON_FILE, args.output, imperial=args.imperial).convert(
+        stats=args.stats
+    )
 
 
 def parse_args(argv):
@@ -148,6 +197,8 @@ def parse_args(argv):
                    default=True,
                    help='do not print stats to STDERR'
     )
+    p.add_argument('-i', '--imperial', dest='imperial', action='store_true',
+                   default=False, help='output stats in imperial units')
     p.add_argument('JSON_FILE', action='store', type=str,
                    help='Input file to convert')
     args = p.parse_args(argv)
