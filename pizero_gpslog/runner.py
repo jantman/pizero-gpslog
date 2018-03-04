@@ -73,7 +73,8 @@ class GpsLogger(object):
 
     def run(self):
         outfile = os.path.join(
-            self.outdir, '%s.out' % datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            self.outdir,
+            '%s.json' % datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         )
         logger.info('Writing output to: %s', outfile)
         with open(outfile, 'w') as fh:
