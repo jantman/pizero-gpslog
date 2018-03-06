@@ -19,11 +19,11 @@ This program relies on `gpsd <http://www.catb.org/gpsd/>`_ to interact with the 
 Requirements
 ------------
 
-* Raspberry Pi (tested with `Pi Zero <https://www.raspberrypi.org/products/raspberry-pi-zero/>`_ 1.3) and a MicroSD card (I'm using an `8GB SanDisk Ultra Class 10 UHS-1 <https://www.amazon.com/gp/product/B00M55C0VU/>`_).
+* Raspberry Pi (tested with `Pi Zero <https://www.raspberrypi.org/products/raspberry-pi-zero/>`_ 1.3) and a MicroSD card (I'm using an `8GB SanDisk Ultra Class 10 UHS-1 <https://www.amazon.com/gp/product/B00M55C0VU/>`_, which has enough space after the OS for 240 days of 5-second-interval data).
 * Raspbian Stretch with Python3 (see installation instructions below)
 * `gpsd compatible <http://www.catb.org/gpsd/hardware.html>`_ GPS (I use a `GlobalSat BU-353-S4 USB <https://www.amazon.com/gp/product/B008200LHW/>`_; the gpsd folks say some pretty awful things about it, but we'll see...)
 * Two GPIO-connected LEDs on the RPi, ideally different colors (see below).
-* Some sort of power source for the Pi. I use a standard adapter when testing and a 10000mAh USB battery pack in the field (specifically the `Anker PowerCore Speed 10000 QA <https://www.amazon.com/gp/product/B01JIYWUBA/>`_).
+* Some sort of power source for the Pi. I use a standard adapter when testing and a 10000mAh USB battery pack in the field (specifically the `Anker PowerCore Speed 10000 QA <https://www.amazon.com/gp/product/B01JIYWUBA/>`_). That battery pack is extreme overkill, and powers the unit continuously for 42 hours, when logging at a 5-second interval.
 
 Installation
 ------------
