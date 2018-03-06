@@ -3,6 +3,10 @@ pizero-gpslog
 
 Raspberry Pi Zero gpsd logger with status LEDs.
 
+[![Photograph of finished hardware next to playing card deck for size comparison](http://blog.jasonantman.com/GFX/pizero_gpslogger_1_sm.jpg)](http://blog.jasonantman.com/GFX/pizero_gpslogger_1.jpg)
+
+A longer description of the motivation behind this and the specific hardware that I used is available on my blog: [DIY Raspberry Pi Zero GPS Track Logger](http://blog.jasonantman.com/2018/03/diy-raspberry-pi-zero-gps-track-logger/).
+
 Introduction and Goals
 ----------------------
 
