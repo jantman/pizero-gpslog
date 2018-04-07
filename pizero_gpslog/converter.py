@@ -77,6 +77,7 @@ class GpxConverter(object):
                     continue
                 if j['tpv'][0].get('mode', 0) < 2:
                     continue
+                j['lineno'] = lineno
                 logs.append(j)
         gpx = self._gpx_for_logs(logs)
         with open(self._out_fpath, 'w') as fh:
@@ -117,21 +118,31 @@ class GpxConverter(object):
         track.segments.append(seg)
 
         for item in logs:
-            tpv = item['tpv'][0]
-            sky = item['sky'][0]
-            p = GPXTrackPoint(
-                latitude=tpv['lat'],
-                longitude=tpv['lon'],
-                elevation=tpv['alt'],
-                time=TIME_TYPE.from_string(tpv['time']),
-                speed=tpv['speed'],
-                horizontal_dilution=sky['hdop'],
-                vertical_dilution=sky['vdop'],
-                position_dilution=sky['pdop']
-            )
-            p.type_of_gpx_fix = '2d' if tpv['mode'] == 2 else '3d'
-            p.satellites = len(sky['satellites'])
-            seg.points.append(p)
+            try:
+                tpv = item['tpv'][0]
+                sky = item['sky'][0]
+                p = GPXTrackPoint(
+                    latitude=tpv['lat'],
+                    longitude=tpv['lon'],
+                    elevation=tpv['alt'],
+                    time=TIME_TYPE.from_string(tpv['time']),
+                    speed=tpv['speed'],
+                    horizontal_dilution=sky.get('hdop', None),
+                    vertical_dilution=sky.get('vdop', None),
+                    position_dilution=sky.get('pdop', None)
+                )
+                if tpv['mode'] == 2:
+                    p.type_of_gpx_fix = '2d'
+                elif tpv['mode'] == 3:
+                    p.type_of_gpx_fix = '3d'
+                if 'satellites' in sky:
+                    p.satellites = len(sky['satellites'])
+                seg.points.append(p)
+            except Exception:
+                sys.stderr.write(
+                    'Exception loading line %d:\n' % item['lineno']
+                )
+                raise
         return g
 
     def _ms_mph(self, n):
