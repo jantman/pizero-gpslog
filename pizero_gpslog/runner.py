@@ -44,6 +44,7 @@ from datetime import datetime
 from pizero_gpslog.gpsd import (
     GpsClient, NoActiveGpsError, NoFixError, GpsResponse
 )
+from pizero_gpslog.version import VERSION, PROJECT_URL
 
 if 'LED_PIN_RED' in os.environ and 'LED_PIN_GREEN' in os.environ:
     from gpiozero import LED
@@ -56,6 +57,9 @@ logger = logging.getLogger(__name__)
 class GpsLogger(object):
 
     def __init__(self):
+        logger.warning(
+            'Starting pizero-gpslog version %s <%s>', VERSION, PROJECT_URL
+        )
         led_1_pin = int(os.environ.get('LED_PIN_RED', '-1'))
         logger.info('Initializing LED1 (Red) on pin %d', led_1_pin)
         self.LED1 = LED(led_1_pin)
