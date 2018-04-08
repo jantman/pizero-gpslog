@@ -72,50 +72,58 @@ class GpsLogger(object):
         logger.debug('Writing logs in: %s', self.outdir)
 
     def run(self):
-        outfile = os.path.join(
-            self.outdir,
-            '%s.json' % datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        )
-        logger.info('Writing output to: %s', outfile)
-        with open(outfile, 'w') as fh:
-            self.LED2.off()
-            while True:
-                time.sleep(self.interval_sec)
-                logger.debug('Reading current position from gpsd')
-                try:
-                    packet = self.gps.current_fix
-                except NoActiveGpsError:
-                    packet = GpsResponse()
-                    packet.mode = 0
-                except NoFixError:
-                    packet = GpsResponse()
-                    packet.mode = 1
-                if packet.mode == 0:
-                    logger.warning(
-                        'No data returned by gpsd (no active GPS) - %s',
-                        packet
-                    )
-                    if not self.LED1.is_lit:
-                        self.LED1.on()
-                    continue
-                if self.LED1.is_lit:
-                    self.LED1.off()
-                if packet.mode == 1:
-                    logger.warning('No GPS fix yet - %s', packet)
-                    self.LED1.blink(on_time=0.1, off_time=0.1, n=3)
-                    continue
-                if packet.mode == 2:
-                    # 2D Fix
-                    logger.info(packet)
-                    self.LED1.blink(on_time=0.5, off_time=0.25, n=2)
-                elif packet.mode == 3:
-                    # 3D Fix
-                    logger.info(packet)
-                    self.LED1.blink(on_time=0.5, off_time=0.25, n=1)
-                fh.write('%s\n' % json.dumps(packet.raw_packet))
-                if self.flush_file:
-                    fh.flush()
-                self.LED2.blink(on_time=0.25, off_time=0.25, n=1)
+        fh = None
+        self.LED2.off()
+        while True:
+            time.sleep(self.interval_sec)
+            logger.debug('Reading current position from gpsd')
+            try:
+                packet = self.gps.current_fix
+            except NoActiveGpsError:
+                packet = GpsResponse()
+                packet.mode = 0
+            except NoFixError:
+                packet = GpsResponse()
+                packet.mode = 1
+            if packet.mode == 0:
+                logger.warning(
+                    'No data returned by gpsd (no active GPS) - %s',
+                    packet
+                )
+                if not self.LED1.is_lit:
+                    self.LED1.on()
+                continue
+            if self.LED1.is_lit:
+                self.LED1.off()
+            if packet.mode == 1:
+                logger.warning('No GPS fix yet - %s', packet)
+                self.LED1.blink(on_time=0.1, off_time=0.1, n=3)
+                continue
+            # else we have a fix
+            if fh is None:
+                # if the file hasn't been opened yet, open it
+                logger.info(
+                    'Got GPS packet with fix; GPS time is %s (UTC)'
+                    '' % packet.get_time()
+                )
+                outfile = os.path.join(
+                    self.outdir,
+                    '%s.json' % packet.get_time().strftime('%Y-%m-%d_%H-%M-%S')
+                )
+                logger.info('Writing output to: %s', outfile)
+                fh = open(outfile, 'w', buffering=1)
+            if packet.mode == 2:
+                # 2D Fix
+                logger.info(packet)
+                self.LED1.blink(on_time=0.5, off_time=0.25, n=2)
+            elif packet.mode == 3:
+                # 3D Fix
+                logger.info(packet)
+                self.LED1.blink(on_time=0.5, off_time=0.25, n=1)
+            fh.write('%s\n' % json.dumps(packet.raw_packet))
+            if self.flush_file:
+                fh.flush()
+            self.LED2.blink(on_time=0.25, off_time=0.25, n=1)
 
 
 def set_log_info(logger):
