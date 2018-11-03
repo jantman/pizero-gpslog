@@ -116,15 +116,20 @@ class GpxConverter(object):
         g.tracks.append(track)
         seg = GPXTrackSegment()
         track.segments.append(seg)
+        prev_alt = 0.0
 
         for item in logs:
             try:
                 tpv = item['tpv'][0]
                 sky = item['sky'][0]
+                alt = tpv.get(
+                    'alt', item['gst'][0].get('alt', prev_alt)
+                )
+                prev_alt = alt
                 p = GPXTrackPoint(
                     latitude=tpv['lat'],
                     longitude=tpv['lon'],
-                    elevation=tpv['alt'],
+                    elevation=alt,
                     time=TIME_TYPE.from_string(tpv['time']),
                     speed=tpv['speed'],
                     horizontal_dilution=sky.get('hdop', None),

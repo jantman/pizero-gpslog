@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.1.2 (2018-11-03)
+------------------
+
+* ``pizero-gpslog-convert`` - Handle logs that are missing altitude (``alt``) from TPV
+  reports by falling back to GST altitude, the previous altitude measurement, or 0.0 (in that order).
+
 0.1.1 (2018-04-08)
 ------------------
 
