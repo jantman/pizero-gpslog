@@ -48,13 +48,12 @@ from pizero_gpslog.version import VERSION
 
 class GpxConverter(object):
 
-    def __init__(self, input_fpath, output_fpath, imperial=False):
+    def __init__(self, input_fpath, imperial=False):
         self._in_fpath = input_fpath
-        self._out_fpath = output_fpath
         self._imperial = imperial
         self._ureg = pint.UnitRegistry()
 
-    def convert(self, stats=True):
+    def convert(self):
         logs = []
         with open(self._in_fpath, 'r') as fh:
             lineno = 0
@@ -80,34 +79,54 @@ class GpxConverter(object):
                 j['lineno'] = lineno
                 logs.append(j)
         gpx = self._gpx_for_logs(logs)
-        with open(self._out_fpath, 'w') as fh:
-            fh.write(gpx.to_xml())
-        if not stats:
-            return
-        stats = 'GPX file written to: %s\n' % self._out_fpath
-        stats += 'Track Start: %s UTC\n' % gpx.get_time_bounds().start_time
-        stats += 'Track End: %s UTC\n' % gpx.get_time_bounds().end_time
-        stats += 'Track Duration: %s\n' % seconds(gpx.get_duration())
-        stats += '%d points in track\n' % gpx.get_points_no()
+        return gpx
+
+    def stats_for_gpx(self, gpx):
         cloned_gpx = gpx.clone()
         cloned_gpx.reduce_points(2000, min_distance=10)
         cloned_gpx.smooth(vertical=True, horizontal=True)
         cloned_gpx.smooth(vertical=True, horizontal=False)
         moving_time, stopped_time, moving_distance, stopped_distance, \
-            max_speed_ms = cloned_gpx.get_moving_data()
-        stats += 'Moving time: %s\n' % seconds(moving_time)
-        stats += 'Stopped time: %s\n' % seconds(stopped_time)
-        stats += 'Max Speed: %s\n' % self._ms_mph(max_speed_ms)
-        stats += '2D (Horizontal) distance: %s\n' % self._m_ftmi(
-            gpx.length_2d()
-        )
+        max_speed_ms = cloned_gpx.get_moving_data()
         ud = gpx.get_uphill_downhill()
-        stats += 'Total elevation increase: %s\n' % self._m_ft(ud.uphill)
-        stats += 'Total elevation decrease: %s\n' % self._m_ft(ud.downhill)
         elev = gpx.get_elevation_extremes()
-        stats += 'Minimum elevation: %s\n' % self._m_ft(elev.minimum)
-        stats += 'Maximum elevation: %s\n' % self._m_ft(elev.maximum)
-        sys.stderr.write(stats)
+        return {
+            'track_start': gpx.get_time_bounds().start_time,
+            'track_end': gpx.get_time_bounds().end_time,
+            'duration_sec': gpx.get_duration(),
+            'num_points': gpx.get_points_no(),
+            'moving_time': moving_time,
+            'stopped_time': stopped_time,
+            'moving_distance': moving_distance,
+            'stopped_distance': stopped_distance,
+            'max_speed_ms': max_speed_ms,
+            '2d_horizontal_distance': gpx.length_2d(),
+            'total_elev_inc': ud.uphill,
+            'total_elev_dec': ud.downhill,
+            'min_elev': elev.minimum,
+            'max_elev': elev.maximum
+        }
+
+    def stats_text(self, stats):
+        s = 'Track Start: %s UTC\n' % stats['track_start']
+        s += 'Track End: %s UTC\n' % stats['track_end']
+        s += 'Track Duration: %s\n' % seconds(stats['duration_sec'])
+        s += '%d points in track\n' % stats['num_points']
+        s += 'Moving time: %s\n' % seconds(stats['moving_time'])
+        s += 'Stopped time: %s\n' % seconds(stats['stopped_time'])
+        s += 'Max Speed: %s\n' % self._ms_mph(stats['max_speed_ms'])
+        s += '2D (Horizontal) distance: %s\n' % self._m_ftmi(
+            stats['2d_horizontal_distance']
+        )
+        s += 'Total elevation increase: %s\n' % self._m_ft(
+            stats['total_elev_inc']
+        )
+        s += 'Total elevation decrease: %s\n' % self._m_ft(
+            stats['total_elev_dec']
+        )
+        s += 'Minimum elevation: %s\n' % self._m_ft(stats['min_elev'])
+        s += 'Maximum elevation: %s\n' % self._m_ft(stats['max_elev'])
+        return s
 
     def _gpx_for_logs(self, logs):
         g = GPX()
@@ -190,9 +209,13 @@ def main(argv=sys.argv[1:]):
             args.output = args.JSON_FILE + '.' + args.format
         else:
             args.output = args.JSON_FILE.rsplit('.', 1)[0] + '.' + args.format
-    GpxConverter(args.JSON_FILE, args.output, imperial=args.imperial).convert(
-        stats=args.stats
-    )
+    conv = GpxConverter(args.JSON_FILE, imperial=args.imperial)
+    gpx = conv.convert()
+    with open(args.output, 'w') as fh:
+        fh.write(gpx.to_xml())
+    sys.stderr.write('GPX file written to: %s' % args.output)
+    if args.stats:
+        print(conv.stats_text(conv.stats_for_gpx(gpx)))
 
 
 def parse_args(argv):

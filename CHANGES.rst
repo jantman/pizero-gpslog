@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.1.3 (2019-12-01)
+------------------
+
+* Refactor ``pizero-gpslog-convert`` to allow use from other Python programs.
+
 0.1.2 (2018-11-03)
 ------------------
 
