@@ -55,7 +55,7 @@ class GpxConverter(object):
 
     def convert(self):
         logs = []
-        with open(self._in_fpath, 'r') as fh:
+        with open(self._in_fpath, 'r', errors='ignore') as fh:
             lineno = 0
             for line in fh.readlines():
                 lineno += 1
