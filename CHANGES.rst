@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.1.4 (2020-07-23)
+------------------
+
+* Merge `PR #5 <https://github.com/jantman/pizero-gpslog/pull/5>`__ to have converter ignore corrupt lines. Thanks to `@markus-k <https://github.com/markus-k>`__.
+
 0.1.3 (2019-12-01)
 ------------------
 
