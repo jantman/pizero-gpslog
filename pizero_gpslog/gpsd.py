@@ -117,10 +117,10 @@ class GpsResponse(object):
         if 'satellites' in last_sky:
             result.sats = len(last_sky['satellites'])
             result.sats_valid = len(
-                [sat for sat in last_sky['satellites'] if sat['used'] == True])
+                [sat for sat in last_sky['satellites'] if sat['used'] is True])
         else:
-            result.sats = 0;
-            result.sats_valid = 0;
+            result.sats = 0
+            result.sats_valid = 0
 
         result.mode = last_tpv['mode']
 

@@ -39,7 +39,6 @@ import os
 import logging
 import time
 import json
-from datetime import datetime
 
 from pizero_gpslog.gpsd import (
     GpsClient, NoActiveGpsError, NoFixError, GpsResponse

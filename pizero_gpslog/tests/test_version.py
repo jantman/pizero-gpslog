@@ -38,7 +38,6 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 import pizero_gpslog.version as version
 
 import re
-import sys
 
 
 class TestVersion(object):

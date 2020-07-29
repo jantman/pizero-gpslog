@@ -6,6 +6,7 @@ Changelog
 
 * Merge `PR #5 <https://github.com/jantman/pizero-gpslog/pull/5>`__ to have converter ignore corrupt lines. Thanks to `@markus-k <https://github.com/markus-k>`__.
 * Use TravisCI for releases; document release process
+* PEP8 fixes
 
 0.1.3 (2019-12-01)
 ------------------

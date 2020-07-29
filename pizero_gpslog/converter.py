@@ -87,7 +87,7 @@ class GpxConverter(object):
         cloned_gpx.smooth(vertical=True, horizontal=True)
         cloned_gpx.smooth(vertical=True, horizontal=False)
         moving_time, stopped_time, moving_distance, stopped_distance, \
-        max_speed_ms = cloned_gpx.get_moving_data()
+            max_speed_ms = cloned_gpx.get_moving_data()
         ud = gpx.get_uphill_downhill()
         elev = gpx.get_elevation_extremes()
         return {
@@ -235,7 +235,7 @@ def parse_args(argv):
     p.add_argument('-S', '--no-stats', dest='stats', action='store_false',
                    default=True,
                    help='do not print stats to STDERR'
-    )
+                   )
     p.add_argument('-i', '--imperial', dest='imperial', action='store_true',
                    default=False, help='output stats in imperial units')
     p.add_argument('JSON_FILE', action='store', type=str,
