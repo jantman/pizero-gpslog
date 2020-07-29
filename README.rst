@@ -5,6 +5,14 @@ pizero-gpslog
    :alt: Project Status: Active – The project has reached a stable, usable state and is being actively developed.
    :target: http://www.repostatus.org/#active
 
+.. image:: https://img.shields.io/pypi/v/pizero-gpslog.svg
+   :alt: PyPI version badge
+   :target: https://pypi.org/project/pizero-gpslog/
+
+.. image:: https://api.travis-ci.org/jantman/pizero-gpslog.png?branch=master
+   :alt: TravisCI build status badge
+   :target: https://travis-ci.org/jantman/pizero-gpslog
+
 Raspberry Pi Zero gpsd logger with status LEDs.
 
 .. image:: http://blog.jasonantman.com/GFX/pizero_gpslogger_1_sm.jpg
