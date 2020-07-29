@@ -63,7 +63,7 @@ This assumes you're running on Linux...
 7. Log in. The default user is named "pi" with a default password of "raspberry".
 8. ``sudo apt-get update && sudo apt-get install haveged git python3-gpiozero python3-setuptools python3-pip gpsd``
 9. Run sudo `raspi-config <https://github.com/RPi-Distro/raspi-config>`_ to set things like the locale and timezone. Personally, I usually leave the ``pi`` user password at its default for devices that will never be on an untrusted network.
-10. In ``/home/pi``, run ``git clone https://github.com/jantman/pizero-gpslog.git && cd pizero-gpslog && sudo python3 setup.py develop && sudo pizero-gpslog-install``. The installer, ``pizero-gpslog-install``, templates out a systemd unit file, reloads systemd, and enables the unit. Environment variables to set for the service are taken from command line arguments.
+10. Run ``sudo pip install pizero-gpslog && sudo pizero-gpslog-install``. The installer, ``pizero-gpslog-install``, templates out a systemd unit file, reloads systemd, and enables the unit. Environment variables to set for the service are taken from command line arguments.
 11. If you're ready, ``sudo systemctl start pizero-gpslog`` to start it. Otherwise, it will start on the next boot.
 12. Find out the USB vendor and product IDs for your GPS. My BU-353S4 uses a Prolific PL2303 serial chipset (vendor 067b product 2303) which is disabled by default in the Debian gpsd udev rules. Look at ``/lib/udev/rules.d/60-gpsd.rules``. If your GPS is commented out like mine, uncomment it and save the file.
 
@@ -134,6 +134,15 @@ Testing
 There currently aren't any code tests. But there are some scripts and tox-based helpers to aid with manual testing.
 
 * ``pizero_gpslog/tests/data/runfake.sh`` - Runs `gpsfake <http://www.catb.org/gpsd/gpsfake.html>`_ (provided by gpsd) with sample data. Takes optional arguments for ``--nofix`` (data with no GPS fix) or ``--stillfix`` (fix but not moving).
+
+Release Process
+---------------
+
+1. Test changes locally, ensure they work as desired.
+1. Ensure the version number has been incremented and there's an entry in ``CHANGES.rst``
+1. Merge PR to ``master`` branch.
+1. Manually tag master with the new version number and create a GitHub Release for it.
+1. The above will trigger TravisCI to build and push to PyPI.
 
 Acknowledgements
 ----------------
