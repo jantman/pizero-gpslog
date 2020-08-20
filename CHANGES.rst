@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.2.0 (2020-08-20)
+------------------
+
+* Update README for current Raspberry Pi OS install instructions
+* Add ``setup_pi.sh`` setup script, based on the one at https://github.com/jantman/pi2graphite/blob/master/setup_raspbian.sh
+* Add development documentation
+
 0.1.4 (2020-07-23)
 ------------------
 
