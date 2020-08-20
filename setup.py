@@ -80,5 +80,9 @@ setup(
     pizero-gpslog-convert = pizero_gpslog.converter:main
     """,
     keywords="raspberry pi rpi gps log logger gpsd",
-    classifiers=classifiers
+    classifiers=classifiers,
+    include_package_data=True,
+    package_data={
+        'pizero_gpslog': ['DejaVuSansCondensed.ttf']
+    }
 )
