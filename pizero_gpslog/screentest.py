@@ -50,6 +50,13 @@ set_log_debug(logger)
 
 
 def main():
+    if 'DISPLAY_CLASS' not in os.environ:
+        logger.warning(
+            'DISPLAY_CLASS environment variable not set; using default dummy'
+        )
+        os.environ[
+            'DISPLAY_CLASS'
+        ] = 'pizero_gpslog.displays.dummy:DummyDisplay'
     modname, clsname = os.environ['DISPLAY_CLASS'].split(':')
     dm = DisplayManager(modname, clsname)
     dm.start()
