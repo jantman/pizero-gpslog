@@ -83,6 +83,6 @@ setup(
     classifiers=classifiers,
     include_package_data=True,
     package_data={
-        'pizero_gpslog': ['DejaVuSansCondensed.ttf']
+        'pizero_gpslog': ['*.ttf']
     }
 )
