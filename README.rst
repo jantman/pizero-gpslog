@@ -61,7 +61,7 @@ This assumes you're running on Linux...
 
 6. Put the SD card in your Pi and plug it in. If you're going to be connecting directly with a keyboard and monitor, do so. If you configured WiFi (or want to use a USB Ethernet adapter) and have everything setup correctly, it should eventually connect to your network. If you have issues with a USB Ethernet adapter, try letting the Pi boot up (give it 2-3 minutes) and *then* plug in the adapter.
 7. Log in. The default user is named "pi" with a default password of "raspberry". Run sudo `raspi-config <https://github.com/RPi-Distro/raspi-config>`_ to set things like the locale and timezone. Personally, I usually leave the ``pi`` user password at its default for devices that will never be on an untrusted network. If using a SPI e-Ink display, as recommended, enable the SPI kernel module via ``raspi-config``. Reboot as needed.
-8. ``sudo apt-get update && sudo apt-get install haveged git python3-gpiozero python3-setuptools python3-pip gpsd``
+8. ``sudo apt-get update && sudo apt-get install haveged git python3-gpiozero python3-setuptools python3-pip gpsd python-gps``
 9. If using a display such as the one recommended: ``sudo apt-get install python3-numpy && sudo pip3 install RPi.GPIO``
 10. Run ``sudo pip3 install pizero-gpslog && sudo pizero-gpslog-install``. The installer, ``pizero-gpslog-install``, templates out a systemd unit file, reloads systemd, and enables the unit. Environment variables to set for the service are taken from command line arguments; see ``pizero-gpslog-install --help`` for details. They can be changed after install by editing ``/etc/systemd/system/pizero-gpslog.service``
 11. If you're ready, ``sudo systemctl start pizero-gpslog`` to start it. Otherwise, it will start on the next boot.
