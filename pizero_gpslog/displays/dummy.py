@@ -36,46 +36,45 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 """
 
 import logging
+from pizero_gpslog.displays.base import BaseDisplay
+from typing import ClassVar
+import time
+import os
 
 logger = logging.getLogger(__name__)
 
 
-class FakeLed(object):
+class DummyDisplay(BaseDisplay):
 
-    def __init__(self, pin_num, **kwargs):
-        self.pin_num = pin_num
-        self._lit = False
+    #: width of the display in characters
+    width_chars: ClassVar[int] = 21
 
-    def on(self):
-        logger.warning('%s ON' % self)
-        self._lit = True
+    #: height of the display in lines
+    height_lines: ClassVar[int] = 5
 
-    def off(self):
-        logger.warning('%s OFF' % self)
-        self._lit = False
+    #: the minimum number of seconds between refreshes of the display
+    min_refresh_seconds: ClassVar[int] = 15
 
-    def blink(self, on_time=1, off_time=1, n=None, background=True):
-        if n is None:
-            raise RuntimeError('ERROR: method would never return!')
-        if not background:
-            raise RuntimeError(
-                'ERROR: LED.blink not called from background!'
-            )
-        logger.warning('%s BLINK on=%s off=%s n=%s background=%s',
-                       self, on_time, off_time, n, background)
-        self._lit = False
+    def __init__(self):
+        super().__init__()
+        self.sleep_time: int = int(os.environ.get('DUMMY_SLEEP_TIME', '2'))
+        logger.debug(
+            'Initialize DummyDisplay; sleep time (%d sec) set by '
+            'DUMMY_SLEEP_TIME environment variable.'
+        )
 
-    def toggle(self):
-        logger.warning('%s TOGGLE' % self)
-        self._lit = not self._lit
+    def update_display(self):
+        """
+        Write ``self._lines`` to the display.
+        """
+        fmt: str = 'DUMMYDISPLAY>|%-' + '%ds|' % self.width_chars
+        for l in self._lines:
+            logger.warning(fmt, l)
+        logger.debug('Dummy display sleeping %d seconds...', self.sleep_time)
+        time.sleep(self.sleep_time)
 
-    @property
-    def is_lit(self):
-        return self._lit
+    def clear(self):
+        logger.warning('------ DUMMYDISPLAY CLEAR -------')
 
-    @property
-    def pin(self):
-        return self.pin_num
-
-    def __repr__(self):
-        return '<FakeLed pin_num=%d>' % self.pin_num
+    def __del__(self):
+        logger.warning('DUMMYDISPLAY __del__')

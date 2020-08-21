@@ -3,7 +3,7 @@ The latest version of this package is available at:
 <http://github.com/jantman/pizero-gpslog>
 
 ##################################################################################
-Copyright 2018 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
+Copyright 2018-2020 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
     This file is part of pizero-gpslog, also known as pizero-gpslog.
 
@@ -39,11 +39,14 @@ import os
 import logging
 import time
 import json
+from typing import Optional
 
 from pizero_gpslog.gpsd import (
     GpsClient, NoActiveGpsError, NoFixError, GpsResponse
 )
 from pizero_gpslog.version import VERSION, PROJECT_URL
+from pizero_gpslog.utils import set_log_info, set_log_debug
+from pizero_gpslog.displaymanager import DisplayManager
 
 if 'LED_PIN_RED' in os.environ and 'LED_PIN_GREEN' in os.environ:
     from gpiozero import LED
@@ -59,19 +62,21 @@ class GpsLogger(object):
         logger.warning(
             'Starting pizero-gpslog version %s <%s>', VERSION, PROJECT_URL
         )
-        led_1_pin = int(os.environ.get('LED_PIN_RED', '-1'))
+        led_1_pin: int = int(os.environ.get('LED_PIN_RED', '-1'))
         logger.info('Initializing LED1 (Red) on pin %d', led_1_pin)
-        self.LED1 = LED(led_1_pin)
-        led_2_pin = int(os.environ.get('LED_PIN_GREEN', '-2'))
+        self.LED1: LED = LED(led_1_pin)
+        led_2_pin: int = int(os.environ.get('LED_PIN_GREEN', '-2'))
         logger.info('Initializing LED2 (Green) on pin %d', led_2_pin)
-        self.LED2 = LED(led_2_pin)
+        self.LED2: LED = LED(led_2_pin)
         self.LED2.on()
         logger.info('Connecting to gpsd')
-        self.gps = GpsClient()
-        self.interval_sec = int(os.environ.get('GPS_INTERVAL_SEC', '5'))
+        self.gps: GpsClient = GpsClient()
+        self.interval_sec: int = int(os.environ.get('GPS_INTERVAL_SEC', '5'))
         logger.info('Sleeping %s seconds between writes', self.interval_sec)
-        self.flush_file = os.environ.get('FLUSH_FILE', '') != 'false'
-        self.outdir = os.path.abspath(os.environ.get('OUT_DIR', os.getcwd()))
+        self.flush_file: str = os.environ.get('FLUSH_FILE', '') != 'false'
+        self.outdir: str = os.path.abspath(
+            os.environ.get('OUT_DIR', os.getcwd())
+        )
         logger.debug('Writing logs in: %s', self.outdir)
 
     def run(self):
@@ -127,43 +132,6 @@ class GpsLogger(object):
             if self.flush_file:
                 fh.flush()
             self.LED2.blink(on_time=0.25, off_time=0.25, n=1)
-
-
-def set_log_info(logger):
-    """
-    set logger level to INFO via :py:func:`~.set_log_level_format`.
-    """
-    set_log_level_format(logger, logging.INFO,
-                         '%(asctime)s %(levelname)s:%(name)s:%(message)s')
-
-
-def set_log_debug(logger):
-    """
-    set logger level to DEBUG, and debug-level output format,
-    via :py:func:`~.set_log_level_format`.
-    """
-    set_log_level_format(
-        logger,
-        logging.DEBUG,
-        "%(asctime)s [%(levelname)s %(filename)s:%(lineno)s - "
-        "%(name)s.%(funcName)s() ] %(message)s"
-    )
-
-
-def set_log_level_format(logger, level, format):
-    """
-    Set logger level and format.
-
-    :param logger: the logger object to set on
-    :type logger: logging.Logger
-    :param level: logging level; see the :py:mod:`logging` constants.
-    :type level: int
-    :param format: logging formatter format string
-    :type format: str
-    """
-    formatter = logging.Formatter(fmt=format)
-    logger.handlers[0].setFormatter(formatter)
-    logger.setLevel(level)
 
 
 def main():

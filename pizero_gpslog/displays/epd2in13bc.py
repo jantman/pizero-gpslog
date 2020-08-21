@@ -36,20 +36,65 @@ Display driver class for Waveshare e-Paper Display HAT 2.13 inch (B)
 
 https://www.waveshare.com/wiki/2.13inch_e-Paper_HAT_(B)
 https://www.amazon.com/gp/product/B075FR81WL/
+
+The latest version of this package is available at:
+<http://github.com/jantman/pizero-gpslog>
+
+##################################################################################
+Copyright 2018-2020 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
+
+    This file is part of pizero-gpslog, also known as pizero-gpslog.
+
+    pizero-gpslog is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    pizero-gpslog is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with pizero-gpslog.  If not, see <http://www.gnu.org/licenses/>.
+
+The Copyright and Authors attributions contained herein may not be removed or
+otherwise altered, except to add the Author attribution of a contributor to
+this work. (Additional Terms pursuant to Section 7b of the AGPL v3)
+##################################################################################
+While not legally required, I sincerely request that anyone who finds
+bugs please submit them at <https://github.com/jantman/pizero-gpslog> or
+to me via email, and that you send any contributions or improvements
+either as a pull request on GitHub, or to me via email.
+##################################################################################
+
+AUTHORS:
+Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
+##################################################################################
 """
 
 import time
 import logging
 import spidev
 import RPi.GPIO
-from typing import Optional
+from typing import Optional, ClassVar
 from pizero_gpslog.displays.base import BaseDisplay
 from PIL import Image, ImageDraw
+
 
 logger = logging.getLogger(__name__)
 
 
 class EPD2in13bc(BaseDisplay):
+
+    #: width of the display in characters
+    width_chars: ClassVar[int] = 21
+
+    #: height of the display in lines
+    height_lines: ClassVar[int] = 5
+
+    #: the minimum number of seconds between refreshes of the display
+    min_refresh_seconds: ClassVar[int] = 15
 
     def __init__(
         self, bus: int = 0, device: int = 0, rst_pin: int = 17,
@@ -80,20 +125,13 @@ class EPD2in13bc(BaseDisplay):
         self._SPI.max_speed_hz = 4000000
         self._SPI.mode = 0b00
         self._initialize()
-        self._wrote_black = True
-        self._wrote_red = True
+        self._wrote_black: bool = True
+        self._wrote_red: bool = True
         self.clear()
-        self._wrote_black = False
-        self._wrote_red = False
+        self._wrote_black: bool = False
+        self._wrote_red: bool = False
+        time.sleep(1)  # present in upstream example
         logger.debug('EPD initialize complete')
-
-    @property
-    def height_lines(self) -> int:
-        return 5
-
-    @property
-    def width_chars(self) -> int:
-        return 21
 
     def _digital_write(self, pin, value):
         self._GPIO.output(pin, value)
@@ -102,15 +140,13 @@ class EPD2in13bc(BaseDisplay):
         return self._GPIO.input(pin)
 
     def _delay_ms(self, delaytime):
-        logger.debug('Sleep %s ms', delaytime)
         time.sleep(delaytime / 1000.0)
 
     def _spi_writebyte(self, data):
         self._SPI.writebytes(data)
 
-    # Hardware reset
-    def _reset(self):
-        logger.debug('Reset')
+    def _hardware_reset(self):
+        logger.debug('Reset EPD')
         self._digital_write(self._reset_pin, 1)
         self._delay_ms(200)
         self._digital_write(self._reset_pin, 0)
@@ -132,17 +168,17 @@ class EPD2in13bc(BaseDisplay):
 
     @property
     def _is_busy(self):
-        return not self._digital_read(self._busy_pin) == 0
+        return self._digital_read(self._busy_pin) == 0
 
     def _wait_for_not_busy(self):
-        logger.debug("Checking if display is busy...")
+        logger.debug("Waiting until display is not busy (100ms check interval)")
         while self._is_busy:
-            logger.debug('display is busy; sleep 100ms and check again')
             self._delay_ms(100)
         logger.debug("display is no longer busy")
 
     def _initialize(self):
-        self._reset()
+        logger.debug('Initialize EPD')
+        self._hardware_reset()
         self._send_command(0x06)  # BOOSTER_SOFT_START
         self._send_data(0x17)
         self._send_data(0x17)
@@ -157,22 +193,21 @@ class EPD2in13bc(BaseDisplay):
         self._send_data(self._width & 0xff)
         self._send_data(self._height >> 8)
         self._send_data(self._height & 0xff)
+        logger.debug('EPD Initialized')
 
     def _getbuffer(self, image):
-        # logger.debug("bufsiz = ",int(self._width/8) * self._height)
         buf = [0xFF] * (int(self._width/8) * self._height)
         image_monocolor = image.convert('1')
         imwidth, imheight = image_monocolor.size
         pixels = image_monocolor.load()
-        # logger.debug("imwidth = %d, imheight = %d",imwidth,imheight)
-        if(imwidth == self._width and imheight == self._height):
+        if imwidth == self._width and imheight == self._height:
             logger.debug("Vertical")
             for y in range(imheight):
                 for x in range(imwidth):
                     # Set the bits for the column of pixels at the current position.
                     if pixels[x, y] == 0:
                         buf[int((x + y * self._width) / 8)] &= ~(0x80 >> (x % 8))
-        elif(imwidth == self._height and imheight == self._width):
+        elif imwidth == self._height and imheight == self._width:
             logger.debug("Horizontal")
             for y in range(imheight):
                 for x in range(imwidth):
@@ -248,7 +283,6 @@ class EPD2in13bc(BaseDisplay):
         self._wait_for_not_busy()
         self._send_command(0x07)  # DEEP_SLEEP
         self._send_data(0xA5)  # check code
-        del self
 
     def _destroy(self):
         logger.debug("spi end")

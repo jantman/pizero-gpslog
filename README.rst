@@ -38,14 +38,12 @@ Requirements
 * `gpsd compatible <http://www.catb.org/gpsd/hardware.html>`_ GPS (I use a `GlobalSat BU-353-S4 USB <https://www.amazon.com/gp/product/B008200LHW/>`_; the gpsd folks say some pretty awful things about it, but we'll see...)
 * Recommended, one of:
   * Two GPIO-connected LEDs on the RPi, ideally different colors (see below).
-  * A bitmap display, such as the `Waveshare 2.13 inch E-Ink Display Hat (B) <https://www.waveshare.com/wiki/2.13inch_e-Paper_HAT_(B)>`__, which I got `on Amazon <https://www.amazon.com/gp/product/B075FR81WL/ref=ppx_yo_dt_b_asin_title_o06_s01?ie=UTF8&psc=1>`__ for $25 USD. While e-Ink displays are comparatively sluggish (this one takes an astonishing 15 seconds to re-draw the screen), they offer some major advantages for this purpose: they have very low power consumption, and the displayed information stays visible until the next refresh even without power. This means that if you have a GPS display that refreshes every minute, it will still show the last coordinates as of when it lost power.
+  * A bitmap display, such as the `Waveshare 2.13 inch E-Ink Display Hat (B) <https://www.waveshare.com/wiki/2.13inch_e-Paper_HAT_(B)>`__, which I got `on Amazon <https://www.amazon.com/gp/product/B075FR81WL/ref=ppx_yo_dt_b_asin_title_o06_s01?ie=UTF8&psc=1>`__ for $25 USD. While e-Ink displays are comparatively sluggish (this one takes an astonishing 15 seconds to re-draw the screen), they offer some major advantages for this purpose: they have very low power consumption, and the displayed information stays visible until the next refresh even without power. This means that if you have a GPS display that refreshes every minute, it will still show the last coordinates as of when it lost power. The one I purchased is also fully assembled and just connects directly to the Pi's 40-pin header.
+  * Some other variety of display, if you're willing to write a driver class for it. See below for further information.
 * Some sort of power source for the Pi. I use a standard adapter when testing and a 10000mAh USB battery pack in the field (specifically the `Anker PowerCore Speed 10000 QA <https://www.amazon.com/gp/product/B01JIYWUBA/>`_). That battery pack is extreme overkill, and powers the unit continuously for 42 hours, when logging at a 5-second interval.
 
-Installation
-------------
-
-Software
-++++++++
+Software Installation
+---------------------
 
 This assumes you're running on Linux...
 
@@ -64,37 +62,27 @@ This assumes you're running on Linux...
 6. Put the SD card in your Pi and plug it in. If you're going to be connecting directly with a keyboard and monitor, do so. If you configured WiFi (or want to use a USB Ethernet adapter) and have everything setup correctly, it should eventually connect to your network. If you have issues with a USB Ethernet adapter, try letting the Pi boot up (give it 2-3 minutes) and *then* plug in the adapter.
 7. Log in. The default user is named "pi" with a default password of "raspberry". Run sudo `raspi-config <https://github.com/RPi-Distro/raspi-config>`_ to set things like the locale and timezone. Personally, I usually leave the ``pi`` user password at its default for devices that will never be on an untrusted network. If using a SPI e-Ink display, as recommended, enable the SPI kernel module via ``raspi-config``. Reboot as needed.
 8. ``sudo apt-get update && sudo apt-get install haveged git python3-gpiozero python3-setuptools python3-pip gpsd``
-9. If using an e-Ink display such as the one recommended: ``sudo apt-get install python3-pil python3-numpy && sudo pip3 install RPi.GPIO``
+9. If using a display such as the one recommended: ``sudo apt-get install python3-numpy && sudo pip3 install RPi.GPIO``
 10. Run ``sudo pip3 install pizero-gpslog && sudo pizero-gpslog-install``. The installer, ``pizero-gpslog-install``, templates out a systemd unit file, reloads systemd, and enables the unit. Environment variables to set for the service are taken from command line arguments; see ``pizero-gpslog-install --help`` for details. They can be changed after install by editing ``/etc/systemd/system/pizero-gpslog.service``
 11. If you're ready, ``sudo systemctl start pizero-gpslog`` to start it. Otherwise, it will start on the next boot.
 12. Find out the USB vendor and product IDs for your GPS. My BU-353S4 uses a Prolific PL2303 serial chipset (vendor 067b product 2303) which is disabled by default in the Debian gpsd udev rules. Look at ``/lib/udev/rules.d/60-gpsd.rules``. If your GPS is commented out like mine, uncomment it and save the file.
 
-Hardware
-++++++++
+Hardware Installation & Setup
+-----------------------------
 
-1. Add two LEDs to the Pi Zero. I prefer to solder a female right-angle header to the Pi, then put the LEDs on a male header so they can be removed. gpiozero, the library used for controlling the LEDs, has `pinout diagrams <https://gpiozero.readthedocs.io/en/stable/recipes.html#pin-numbering>`_ and information on the `wiring that the API expects <https://gpiozero.readthedocs.io/en/stable/api_output.html#gpiozero.LED>`_. The code this project uses expects the LEDs to be wired active-high (cathode to ground, anode to GPIO pin through a limiting resistor). I made up a small 8x20 header for my LEDs and (very sloppily) potted them in epoxy.
-2. Test the LEDs.
-3. Plug your GPS into the USB input on the RPi, via a "usb on the go" (USB OTG) cable. Then plug the Pi into a power source. Everything else should be automatic after the installation described below.
+GPS
++++
 
-Configuration
--------------
+This should be pretty simple. Plug your GPS into the USB input on the RPi, via a "usb on the go" (USB OTG) cable.
 
-pizero-gpslog's entire configuration is provided via environment variables. There are NO command-line switches.
+LED Indicators for GPS Fix & Disk Write
++++++++++++++++++++++++++++++++++++++++
 
-* ``LOG_LEVEL`` - Defaults to "WARNING"; other accepted values are "INFO" and "DEBUG". All logging is to STDOUT.
-* ``LED_PIN_RED`` - Integer. Specifies the GPIO pin number used for the primary ("red") LED. Leave unset if running on non-RPi hardware, in which case LED state will be logged to STDOUT. Note the number used here is the Broadcom GPIO pin number, not the physical board pin number.
-* ``LED_PIN_GREEN`` - Integer. Specifies the GPIO pin number used for the secondary ("green") LED. Leave unset if running on non-RPi hardware, in which case LED state will be logged to STDOUT. Note the number used here is the Broadcom GPIO pin number, not the physical board pin number.
-* ``GPS_INTERVAL_SEC`` - Integer. Interval to poll gps at, and write gps position. Defaults to every 5 seconds.
-* ``FLUSH_FILE`` - String. If set to "false", do not explicitly flush output file after every write.
-* ``OUT_DIR`` - Directory to write log files under. If not set, will use current working directory.
+The simplest status indication adds two LEDs to the Pi Zero. I prefer to solder a female right-angle header to the Pi, then put the LEDs on a male header so they can be removed. gpiozero, the library used for controlling the LEDs, has `pinout diagrams <https://gpiozero.readthedocs.io/en/stable/recipes.html#pin-numbering>`_ and information on the `wiring that the API expects <https://gpiozero.readthedocs.io/en/stable/api_output.html#gpiozero.LED>`_. The code this project uses expects the LEDs to be wired active-high (cathode to ground, anode to GPIO pin through a limiting resistor). I made up a small 8x20 header for my LEDs and (very sloppily) potted them in epoxy.
 
-Running
--------
+The LEDs are configured using the ``LED_PIN_RED`` and ``LED_PIN_GREEN`` environment variables, as described in the Configuration section.
 
-Configure as described above, then use the ``pizero-gpslog`` systemd service.
-
-LED Outputs
-+++++++++++
+The LED outputs are as follows:
 
 * Green Solid (at start) - connecting to gpsd. Green LED goes out when connected to gpsd and the output file is opened for writing.
 * Red Solid - no active GPS (gpsd does not yet have an active gps, or no GPS is connected).
@@ -102,6 +90,41 @@ LED Outputs
 * Red 2 Slow Blinks (0.5 sec) - GPS has a 2D-only fix; position data is being read.
 * Red 1 Slow Blink (0.5s) - GPS has a 3D fix; position data is being read.
 * Green Blink (0.25s) - Data point written to disk (and flushed, if flush not disabled).
+
+Waveshare 2.13-inch e-Ink Display Hat B
++++++++++++++++++++++++++++++++++++++++
+
+This display has a fixed pinout, and plugs directly in to the Pi's 40-pin GPIO header. **You must enable SPI via ``raspi-config`` before it will work.** The display is extremely sluggish, and takes approximately 15 seconds to redraw the image. It does not support partial re-draw, though some of their other models do.
+
+This display has a driver built-in to pizero-gpslog. To use the display, set ``DISPLAY_CLASS`` to ``pizero_gpslog.displays.epd2in13bc:EPD2in13bc``.
+
+Displays can be tested with some sample data using the ``pizero-gpslog-screentest`` entrypoint.
+
+Your Own Display
+++++++++++++++++
+
+pizero-gpslog can support "any" display that's capable of rendering text. By default, it expects a display capable of rendering four lines of text, each 20-characters or more long. Individual display driver classes can work around this assumption if needed. To implement a display driver class, create a subclass of ``pizero_gpslog.displays.base.BaseDisplay`` and implement at least the required methods and properties, as well as whatever internals your display needs. See the ``EPD2in13bc`` class as an example. While it is strongly encouraged for you to contribute any display drivers back to the project via pull requests, the import system used can import any class from any importable module.
+
+Displays can be tested with some sample data using the ``pizero-gpslog-screentest`` entrypoint.
+
+Configuration
+-------------
+
+pizero-gpslog's entire configuration is provided via environment variables. There are NO command-line switches. By default, these are set in ``/etc/systemd/system/pizero-gpslog.service`` by the ``pizero-gpslog-install`` installer script and need to be updated in that file.
+
+* ``LOG_LEVEL`` - Defaults to "WARNING"; other accepted values are "INFO" and "DEBUG". All logging is to STDOUT.
+* ``LED_PIN_RED`` - Integer. Specifies the GPIO pin number used for the primary ("red") LED. Leave unset if running on non-RPi hardware (in which case LED state will be logged to STDOUT) or if using a display. Note the number used here is the Broadcom GPIO pin number, not the physical board pin number.
+* ``LED_PIN_GREEN`` - Integer. Specifies the GPIO pin number used for the secondary ("green") LED. Leave unset if running on non-RPi hardware (in which case LED state will be logged to STDOUT) or if using a display. Note the number used here is the Broadcom GPIO pin number, not the physical board pin number.
+* ``GPS_INTERVAL_SEC`` - Integer. Interval to poll gps at, and write gps position. Defaults to every 5 seconds.
+* ``FLUSH_FILE`` - String. If set to "false", do not explicitly flush output file after every write.
+* ``OUT_DIR`` - Directory to write log files under. If not set, will use current working directory (when running via systemd, as default, this will be the current directory that the installer was run in).
+* ``DISPLAY_CLASS`` - String. The colon-separated module path and class name of an importable class to drive a display. See details above on using displays.
+* ``DISPLAY_REFRESH_SEC`` - Integer. The ideal/target number of seconds between display refreshes. Note that how fast a display can actually refresh is hardware-specific, and how fast you *want* it to refresh is based on its power consumption and your battery life. The default value for this parameter is to refresh **as quickly as the display will allow!** If you use a fast display, you should set this to a sane integer.
+
+Running
+-------
+
+Configure as described above. Plug the Pi into a power source. Everything else should be automatic after the installation described above. The ``pizero-gpslog`` systemd service should start automatically at boot.
 
 Log Files
 +++++++++

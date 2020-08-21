@@ -3,7 +3,7 @@ The latest version of this package is available at:
 <http://github.com/jantman/pizero-gpslog>
 
 ##################################################################################
-Copyright 2018 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
+Copyright 2018-2020 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
     This file is part of pizero-gpslog, also known as pizero-gpslog.
 
@@ -34,3 +34,4 @@ AUTHORS:
 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
+

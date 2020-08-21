@@ -44,7 +44,8 @@ with open('README.rst') as file:
 requires = [
     'gpiozero',
     'gpxpy',
-    'pint'
+    'pint',
+    'pillow'
 ]
 
 classifiers = [
@@ -78,6 +79,7 @@ setup(
     pizero-gpslog = pizero_gpslog.runner:main
     pizero-gpslog-install = pizero_gpslog.installer:main
     pizero-gpslog-convert = pizero_gpslog.converter:main
+    pizero-gpslog-screentest = pizero_gpslog.screentest:main
     """,
     keywords="raspberry pi rpi gps log logger gpsd",
     classifiers=classifiers,
