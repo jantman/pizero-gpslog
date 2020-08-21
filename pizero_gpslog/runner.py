@@ -40,6 +40,7 @@ import logging
 import time
 import json
 from typing import Optional
+from _io import TextIOWrapper
 
 from pizero_gpslog.gpsd import (
     GpsClient, NoActiveGpsError, NoFixError, GpsResponse
@@ -78,9 +79,9 @@ class GpsLogger(object):
             os.environ.get('OUT_DIR', os.getcwd())
         )
         logger.debug('Writing logs in: %s', self.outdir)
+        self._fh: Optional[TextIOWrapper] = None
 
     def run(self):
-        fh = None
         self.LED2.off()
         while True:
             time.sleep(self.interval_sec)
@@ -93,45 +94,59 @@ class GpsLogger(object):
             except NoFixError:
                 packet = GpsResponse()
                 packet.mode = 1
-            if packet.mode == 0:
-                logger.warning(
-                    'No data returned by gpsd (no active GPS) - %s',
-                    packet
-                )
-                if not self.LED1.is_lit:
-                    self.LED1.on()
-                continue
-            if self.LED1.is_lit:
-                self.LED1.off()
-            if packet.mode == 1:
-                logger.warning('No GPS fix yet - %s', packet)
-                self.LED1.blink(on_time=0.1, off_time=0.1, n=3)
-                continue
-            # else we have a fix
-            if fh is None:
-                # if the file hasn't been opened yet, open it
-                logger.info(
-                    'Got GPS packet with fix; GPS time is %s (UTC)'
-                    '' % packet.get_time()
-                )
-                outfile = os.path.join(
-                    self.outdir,
-                    '%s.json' % packet.get_time().strftime('%Y-%m-%d_%H-%M-%S')
-                )
-                logger.info('Writing output to: %s', outfile)
-                fh = open(outfile, 'w', buffering=1)
-            if packet.mode == 2:
-                # 2D Fix
-                logger.info(packet)
-                self.LED1.blink(on_time=0.5, off_time=0.25, n=2)
-            elif packet.mode == 3:
-                # 3D Fix
-                logger.info(packet)
-                self.LED1.blink(on_time=0.5, off_time=0.25, n=1)
-            fh.write('%s\n' % json.dumps(packet.raw_packet))
-            if self.flush_file:
-                fh.flush()
-            self.LED2.blink(on_time=0.25, off_time=0.25, n=1)
+            self._handle_packet(packet)
+
+    def _handle_waiting_gps(self, packet: GpsResponse):
+        logger.warning(
+            'No data returned by gpsd (no active GPS) - %s',
+            packet
+        )
+        if not self.LED1.is_lit:
+            self.LED1.on()
+
+    def _handle_no_fix(self, packet: GpsResponse):
+        logger.warning('No GPS fix yet - %s', packet)
+        self.LED1.blink(on_time=0.1, off_time=0.1, n=3)
+
+    def _ensure_file_open(self, packet: GpsResponse):
+        if self._fh is not None:
+            return
+        logger.info(
+            'Got GPS packet with fix; GPS time is %s (UTC)'
+            '' % packet.get_time()
+        )
+        outfile = os.path.join(
+            self.outdir,
+            '%s.json' % packet.get_time().strftime('%Y-%m-%d_%H-%M-%S')
+        )
+        logger.info('Writing output to: %s', outfile)
+        self._fh = open(outfile, 'w', buffering=1)
+
+    def _handle_2d_fix(self, packet: GpsResponse):
+        logger.info(packet)
+        self.LED1.blink(on_time=0.5, off_time=0.25, n=2)
+
+    def _handle_3d_fix(self, packet: GpsResponse):
+        logger.info(packet)
+        self.LED1.blink(on_time=0.5, off_time=0.25, n=1)
+
+    def _handle_packet(self, packet: GpsResponse):
+        if packet.mode == 0:
+            return self._handle_waiting_gps(packet)
+        if self.LED1.is_lit:
+            self.LED1.off()
+        if packet.mode == 1:
+            return self._handle_no_fix(packet)
+        # else we have a fix
+        self._ensure_file_open(packet)
+        if packet.mode == 2:
+            self._handle_2d_fix(packet)
+        elif packet.mode == 3:
+            self._handle_3d_fix(packet)
+        self._fh.write('%s\n' % json.dumps(packet.raw_packet))
+        if self.flush_file:
+            self._fh.flush()
+        self.LED2.blink(on_time=0.25, off_time=0.25, n=1)
 
 
 def main():
