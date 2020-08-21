@@ -180,3 +180,10 @@ class DisplayManager:
         self._lat.set(slots[2])
         self._lon.set(slots[3])
         self._extradata.set(slots[4])
+
+    def clear(self):
+        self._status.set('')
+        self._lat.set('')
+        self._lon.set('')
+        self._extradata.set('')
+        self._heading.set('')

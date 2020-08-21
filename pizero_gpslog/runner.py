@@ -41,6 +41,7 @@ import time
 import json
 from typing import Optional
 from _io import TextIOWrapper
+from datetime import datetime
 
 from pizero_gpslog.gpsd import (
     GpsClient, NoActiveGpsError, NoFixError, GpsResponse
@@ -80,6 +81,11 @@ class GpsLogger(object):
         )
         logger.debug('Writing logs in: %s', self.outdir)
         self._fh: Optional[TextIOWrapper] = None
+        self._display: Optional[DisplayManager] = None
+        if 'DISPLAY_CLASS' in os.environ:
+            modname, clsname = os.environ['DISPLAY_CLASS'].split(':')
+            self._display = DisplayManager(modname, clsname)
+            self._display.start()
 
     def run(self):
         self.LED2.off()
@@ -103,10 +109,18 @@ class GpsLogger(object):
         )
         if not self.LED1.is_lit:
             self.LED1.on()
+        if self._display is not None:
+            self._display.clear()
+            self._display.set_heading(datetime.now().strftime('%H:%M:%S'))
+            self._display.set_status('no active GPS. waiting...')
 
     def _handle_no_fix(self, packet: GpsResponse):
         logger.warning('No GPS fix yet - %s', packet)
         self.LED1.blink(on_time=0.1, off_time=0.1, n=3)
+        if self._display is not None:
+            self._display.clear()
+            self._display.set_heading(datetime.now().strftime('%H:%M:%S'))
+            self._display.set_status('no fix yet; waiting...')
 
     def _ensure_file_open(self, packet: GpsResponse):
         if self._fh is not None:
@@ -125,10 +139,24 @@ class GpsLogger(object):
     def _handle_2d_fix(self, packet: GpsResponse):
         logger.info(packet)
         self.LED1.blink(on_time=0.5, off_time=0.25, n=2)
+        if self._display is not None:
+            self._display.clear()
+            self._display.set_heading(packet.get_time().strftime('%H:%M:%S'))
+            self._display.set_status('2D Fix; %s,%s' % packet.position_precision())
+            lat, lon = packet.position()
+            self._display.set_lat('Lat %s' % lat)
+            self._display.set_lon('Lon %s' % lon)
 
     def _handle_3d_fix(self, packet: GpsResponse):
         logger.info(packet)
         self.LED1.blink(on_time=0.5, off_time=0.25, n=1)
+        if self._display is not None:
+            self._display.clear()
+            self._display.set_heading(packet.get_time().strftime('%H:%M:%S'))
+            self._display.set_status('3D Fix; %s,%s' % packet.position_precision())
+            lat, lon = packet.position()
+            self._display.set_lat('Lat %s' % lat)
+            self._display.set_lon('Lon %s' % lon)
 
     def _handle_packet(self, packet: GpsResponse):
         if packet.mode == 0:
