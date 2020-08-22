@@ -111,7 +111,9 @@ class GpsLogger(object):
             self.LED1.on()
         if self._display is not None:
             self._display.clear()
-            self._display.set_heading(datetime.now().strftime('%H:%M:%S'))
+            self._display.set_heading(
+                datetime.utcnow().strftime('%H:%M:%S UTC')
+            )
             self._display.set_status('no active GPS. waiting...')
 
     def _handle_no_fix(self, packet: GpsResponse):
@@ -119,7 +121,9 @@ class GpsLogger(object):
         self.LED1.blink(on_time=0.1, off_time=0.1, n=3)
         if self._display is not None:
             self._display.clear()
-            self._display.set_heading(datetime.now().strftime('%H:%M:%S'))
+            self._display.set_heading(
+                datetime.utcnow().strftime('%H:%M:%S UTC')
+            )
             self._display.set_status('no fix yet; waiting...')
 
     def _ensure_file_open(self, packet: GpsResponse):
@@ -141,7 +145,9 @@ class GpsLogger(object):
         self.LED1.blink(on_time=0.5, off_time=0.25, n=2)
         if self._display is not None:
             self._display.clear()
-            self._display.set_heading(packet.get_time().strftime('%H:%M:%S'))
+            self._display.set_heading(
+                packet.get_time().strftime('%H:%M:%S UTC')
+            )
             self._display.set_status('2D Fix; %s,%s' % packet.position_precision())
             lat, lon = packet.position()
             self._display.set_lat('Lat %s' % lat)
@@ -152,7 +158,9 @@ class GpsLogger(object):
         self.LED1.blink(on_time=0.5, off_time=0.25, n=1)
         if self._display is not None:
             self._display.clear()
-            self._display.set_heading(packet.get_time().strftime('%H:%M:%S'))
+            self._display.set_heading(
+                packet.get_time().strftime('%H:%M:%S UTC')
+            )
             self._display.set_status('3D Fix; %s,%s' % packet.position_precision())
             lat, lon = packet.position()
             self._display.set_lat('Lat %s' % lat)
