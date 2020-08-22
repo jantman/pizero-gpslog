@@ -64,8 +64,8 @@ This assumes you're running on Linux...
 8. ``sudo apt-get update && sudo apt-get install haveged git python3-gpiozero python3-setuptools python3-pip gpsd python-gps``
 9. If using a display such as the one recommended: ``sudo apt-get install python3-numpy && sudo pip3 install RPi.GPIO``
 10. Run ``sudo pip3 install pizero-gpslog && sudo pizero-gpslog-install``. The installer, ``pizero-gpslog-install``, templates out a systemd unit file, reloads systemd, and enables the unit. Environment variables to set for the service are taken from command line arguments; see ``pizero-gpslog-install --help`` for details. They can be changed after install by editing ``/etc/systemd/system/pizero-gpslog.service``
-11. If you're ready, ``sudo systemctl start pizero-gpslog`` to start it. Otherwise, it will start on the next boot.
-12. Find out the USB vendor and product IDs for your GPS. My BU-353S4 uses a Prolific PL2303 serial chipset (vendor 067b product 2303) which is disabled by default in the Debian gpsd udev rules. Look at ``/lib/udev/rules.d/60-gpsd.rules``. If your GPS is commented out like mine, uncomment it and save the file.
+11. Find out the USB vendor and product IDs for your GPS. My BU-353S4 uses a Prolific PL2303 serial chipset (vendor 067b product 2303) which is disabled by default in the Debian gpsd udev rules because it matches too many devices. Look at ``/lib/udev/rules.d/60-gpsd.rules``. If your GPS is commented out like mine, uncomment it and save the file.
+12. If you're ready, ``sudo systemctl start pizero-gpslog`` to start it. Otherwise, it will start on the next boot.
 
 Hardware Installation & Setup
 -----------------------------
