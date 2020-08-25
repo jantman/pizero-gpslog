@@ -42,6 +42,7 @@ import json
 from typing import Optional
 from _io import TextIOWrapper
 from datetime import datetime
+from importlib import import_module
 
 from pizero_gpslog.gpsd import (
     GpsClient, NoActiveGpsError, NoFixError, GpsResponse
@@ -49,6 +50,7 @@ from pizero_gpslog.gpsd import (
 from pizero_gpslog.version import VERSION, PROJECT_URL
 from pizero_gpslog.utils import set_log_info, set_log_debug
 from pizero_gpslog.displaymanager import DisplayManager
+from pizero_gpslog.extradata.base import BaseExtraDataProvider
 
 if 'LED_PIN_RED' in os.environ and 'LED_PIN_GREEN' in os.environ:
     from gpiozero import LED
@@ -86,6 +88,16 @@ class GpsLogger(object):
             modname, clsname = os.environ['DISPLAY_CLASS'].split(':')
             self._display = DisplayManager(modname, clsname)
             self._display.start()
+        self._extra_data_instance = None
+        if 'EXTRA_DATA_CLASS' in os.environ:
+            modname, clsname = os.environ['EXTRA_DATA_CLASS'].split(':')
+            logger.debug('Import %s:%s', modname, clsname)
+            mod = import_module(modname)
+            extra_cls: BaseExtraDataProvider.__class__ = getattr(
+                mod, clsname
+            )
+            self._extra_data_instance = extra_cls()
+            self._extra_data_instance.start()
 
     def run(self):
         self.LED2.off()
@@ -115,6 +127,10 @@ class GpsLogger(object):
                 datetime.utcnow().strftime('%H:%M:%S UTC')
             )
             self._display.set_status('no active GPS. waiting...')
+            if self._extra_data_instance is not None:
+                self._display.set_extradata(
+                    self._extra_data_instance.data.get('message', '')
+                )
 
     def _handle_no_fix(self, packet: GpsResponse):
         logger.warning('No GPS fix yet - %s', packet)
@@ -125,6 +141,10 @@ class GpsLogger(object):
                 datetime.utcnow().strftime('%H:%M:%S UTC')
             )
             self._display.set_status('no fix yet; waiting...')
+            if self._extra_data_instance is not None:
+                self._display.set_extradata(
+                    self._extra_data_instance.data.get('message', '')
+                )
 
     def _ensure_file_open(self, packet: GpsResponse):
         if self._fh is not None:
@@ -152,6 +172,10 @@ class GpsLogger(object):
             lat, lon = packet.position()
             self._display.set_lat('Lat %s' % lat)
             self._display.set_lon('Lon %s' % lon)
+            if self._extra_data_instance is not None:
+                self._display.set_extradata(
+                    self._extra_data_instance.data.get('message', '')
+                )
 
     def _handle_3d_fix(self, packet: GpsResponse):
         logger.info(packet)
@@ -165,6 +189,10 @@ class GpsLogger(object):
             lat, lon = packet.position()
             self._display.set_lat('Lat %s' % lat)
             self._display.set_lon('Lon %s' % lon)
+            if self._extra_data_instance is not None:
+                self._display.set_extradata(
+                    self._extra_data_instance.data.get('message', '')
+                )
 
     def _handle_packet(self, packet: GpsResponse):
         if packet.mode == 0:
@@ -179,6 +207,8 @@ class GpsLogger(object):
             self._handle_2d_fix(packet)
         elif packet.mode == 3:
             self._handle_3d_fix(packet)
+        if self._extra_data_instance is not None:
+            packet.raw_packet['_extra_data'] = self._extra_data_instance.data
         self._fh.write('%s\n' % json.dumps(packet.raw_packet))
         if self.flush_file:
             self._fh.flush()

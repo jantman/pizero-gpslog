@@ -8,6 +8,7 @@ Changelog
 * Add ``setup_pi.sh`` setup script, based on the one at https://github.com/jantman/pi2graphite/blob/master/setup_raspbian.sh
 * Add development documentation
 * Add support for displays. Begin with the Waveshare 2.13-inch e-Ink Display Hat B; allow users to implement their own display driver classes.
+* Implement support for extra data providers.
 
 0.1.4 (2020-07-23)
 ------------------
