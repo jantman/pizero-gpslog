@@ -47,11 +47,11 @@ class FakeLed(object):
         self._lit = False
 
     def on(self):
-        logger.warning('%s ON' % self)
+        logger.info('%s ON' % self)
         self._lit = True
 
     def off(self):
-        logger.warning('%s OFF' % self)
+        logger.info('%s OFF' % self)
         self._lit = False
 
     def blink(self, on_time=1, off_time=1, n=None, background=True):
@@ -61,12 +61,12 @@ class FakeLed(object):
             raise RuntimeError(
                 'ERROR: LED.blink not called from background!'
             )
-        logger.warning('%s BLINK on=%s off=%s n=%s background=%s',
-                       self, on_time, off_time, n, background)
+        logger.info('%s BLINK on=%s off=%s n=%s background=%s',
+                    self, on_time, off_time, n, background)
         self._lit = False
 
     def toggle(self):
-        logger.warning('%s TOGGLE' % self)
+        logger.info('%s TOGGLE' % self)
         self._lit = not self._lit
 
     @property
