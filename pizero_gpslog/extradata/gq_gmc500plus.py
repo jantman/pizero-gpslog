@@ -68,14 +68,26 @@ class GqGMC500plus(BaseExtraDataProvider):
         if devname is None:
             devname = self._find_usb_device()
         if devname is None:
-            raise RuntimeError(
+            logger.critical(
                 'ERROR: No devname given, and could not determine GMC-500+ '
                 'device name using pyudev.'
             )
+            self._devname = devname
+            return
         self._devname = devname
         logger.info('Using device: %s', devname)
+        self._sleep_time = int(os.environ.get('GMC_SLEEP_SEC', '5'))
+        logger.info(
+            'Sleeping %d seconds between GMC polls; override by setting '
+            'GMC_SLEEP_SEC environment variable as an int', self._sleep_time
+        )
+        self._gmc = None
+        self._init_gmc()
+
+    def _init_gmc(self):
+        self._gmc = None
         logger.debug('Connecting to GMC...')
-        self._gmc = GMC(config_update={'DEFAULT_PORT': devname})
+        self._gmc = GMC(config_update={'DEFAULT_PORT': self._devname})
         logger.debug('Connected.')
         self._config = self._gmc.get_config()
         logger.info(
@@ -90,37 +102,41 @@ class GqGMC500plus(BaseExtraDataProvider):
         self._calibration = {
             x: self._config[x] for x in calib_fields
         }
-        self._sleep_time = int(os.environ.get('GMC_SLEEP_SEC', '5'))
-        logger.info(
-            'Sleeping %d seconds between GMC polls; override by setting '
-            'GMC_SLEEP_SEC environment variable as an int', self._sleep_time
-        )
 
     def run(self):
+        if self._devname is None:
+            logger.critical('No GMC-500 found; exiting thread')
+            return
         logger.debug('Running extra data provider...')
         while True:
-            cps = self._gmc.cps(numeric=True)
-            cpsl = self._gmc.cpsl(numeric=True)
-            cpsh = self._gmc.cpsh(numeric=True)
-            cpm = self._gmc.cpm(numeric=True)
-            cpml = self._gmc.cpml(numeric=True)
-            cpmh = self._gmc.cpmh(numeric=True)
-            maxcps = self._gmc.max_cps(numeric=True)
-            logger.debug('End querying GMC')
-            self._data = {
-                'message': f'{cps} CPS | {cpm} CPM',
-                'data': {
-                    'time': time(),
-                    'cps': cps,
-                    'cpsl': cpsl,
-                    'cpsh': cpsh,
-                    'cpm': cpm,
-                    'cpml': cpml,
-                    'cpmh': cpmh,
-                    'maxcps': maxcps,
-                    'calibration': self._calibration
+            try:
+                cps = self._gmc.cps(numeric=True)
+                cpsl = self._gmc.cpsl(numeric=True)
+                cpsh = self._gmc.cpsh(numeric=True)
+                cpm = self._gmc.cpm(numeric=True)
+                cpml = self._gmc.cpml(numeric=True)
+                cpmh = self._gmc.cpmh(numeric=True)
+                maxcps = self._gmc.max_cps(numeric=True)
+                logger.debug('End querying GMC')
+                self._data = {
+                    'message': f'{cps} CPS | {cpm} CPM',
+                    'data': {
+                        'time': time(),
+                        'cps': cps,
+                        'cpsl': cpsl,
+                        'cpsh': cpsh,
+                        'cpm': cpm,
+                        'cpml': cpml,
+                        'cpmh': cpmh,
+                        'maxcps': maxcps,
+                        'calibration': self._calibration
+                    }
                 }
-            }
+            except Exception as ex:
+                logger.error(
+                    'Error querying GMC; re-init. Error: %s', ex, exc_info=True
+                )
+                self._init_gmc()
             sleep(self._sleep_time)
 
     def _find_usb_device(self):
