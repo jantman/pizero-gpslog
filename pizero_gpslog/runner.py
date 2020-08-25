@@ -3,7 +3,7 @@ The latest version of this package is available at:
 <http://github.com/jantman/pizero-gpslog>
 
 ##################################################################################
-Copyright 2018 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
+Copyright 2018-2020 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
     This file is part of pizero-gpslog, also known as pizero-gpslog.
 
@@ -39,11 +39,18 @@ import os
 import logging
 import time
 import json
+from typing import Optional
+from _io import TextIOWrapper
+from datetime import datetime
+from importlib import import_module
 
 from pizero_gpslog.gpsd import (
     GpsClient, NoActiveGpsError, NoFixError, GpsResponse
 )
 from pizero_gpslog.version import VERSION, PROJECT_URL
+from pizero_gpslog.utils import set_log_info, set_log_debug
+from pizero_gpslog.displaymanager import DisplayManager
+from pizero_gpslog.extradata.base import BaseExtraDataProvider
 
 if 'LED_PIN_RED' in os.environ and 'LED_PIN_GREEN' in os.environ:
     from gpiozero import LED
@@ -59,23 +66,40 @@ class GpsLogger(object):
         logger.warning(
             'Starting pizero-gpslog version %s <%s>', VERSION, PROJECT_URL
         )
-        led_1_pin = int(os.environ.get('LED_PIN_RED', '-1'))
+        led_1_pin: int = int(os.environ.get('LED_PIN_RED', '-1'))
         logger.info('Initializing LED1 (Red) on pin %d', led_1_pin)
-        self.LED1 = LED(led_1_pin)
-        led_2_pin = int(os.environ.get('LED_PIN_GREEN', '-2'))
+        self.LED1: LED = LED(led_1_pin)
+        led_2_pin: int = int(os.environ.get('LED_PIN_GREEN', '-2'))
         logger.info('Initializing LED2 (Green) on pin %d', led_2_pin)
-        self.LED2 = LED(led_2_pin)
+        self.LED2: LED = LED(led_2_pin)
         self.LED2.on()
         logger.info('Connecting to gpsd')
-        self.gps = GpsClient()
-        self.interval_sec = int(os.environ.get('GPS_INTERVAL_SEC', '5'))
+        self.gps: GpsClient = GpsClient()
+        self.interval_sec: int = int(os.environ.get('GPS_INTERVAL_SEC', '5'))
         logger.info('Sleeping %s seconds between writes', self.interval_sec)
-        self.flush_file = os.environ.get('FLUSH_FILE', '') != 'false'
-        self.outdir = os.path.abspath(os.environ.get('OUT_DIR', os.getcwd()))
+        self.flush_file: str = os.environ.get('FLUSH_FILE', '') != 'false'
+        self.outdir: str = os.path.abspath(
+            os.environ.get('OUT_DIR', os.getcwd())
+        )
         logger.debug('Writing logs in: %s', self.outdir)
+        self._fh: Optional[TextIOWrapper] = None
+        self._display: Optional[DisplayManager] = None
+        if 'DISPLAY_CLASS' in os.environ:
+            modname, clsname = os.environ['DISPLAY_CLASS'].split(':')
+            self._display = DisplayManager(modname, clsname)
+            self._display.start()
+        self._extra_data_instance = None
+        if 'EXTRA_DATA_CLASS' in os.environ:
+            modname, clsname = os.environ['EXTRA_DATA_CLASS'].split(':')
+            logger.debug('Import %s:%s', modname, clsname)
+            mod = import_module(modname)
+            extra_cls: BaseExtraDataProvider.__class__ = getattr(
+                mod, clsname
+            )
+            self._extra_data_instance = extra_cls()
+            self._extra_data_instance.start()
 
     def run(self):
-        fh = None
         self.LED2.off()
         while True:
             time.sleep(self.interval_sec)
@@ -88,82 +112,107 @@ class GpsLogger(object):
             except NoFixError:
                 packet = GpsResponse()
                 packet.mode = 1
-            if packet.mode == 0:
-                logger.warning(
-                    'No data returned by gpsd (no active GPS) - %s',
-                    packet
+            self._handle_packet(packet)
+
+    def _handle_waiting_gps(self, packet: GpsResponse):
+        logger.warning(
+            'No data returned by gpsd (no active GPS) - %s',
+            packet
+        )
+        if not self.LED1.is_lit:
+            self.LED1.on()
+        if self._display is not None:
+            self._display.clear()
+            self._display.set_heading(
+                datetime.utcnow().strftime('%H:%M:%S UTC')
+            )
+            self._display.set_status('no active GPS. waiting...')
+            if self._extra_data_instance is not None:
+                self._display.set_extradata(
+                    self._extra_data_instance.data.get('message', '')
                 )
-                if not self.LED1.is_lit:
-                    self.LED1.on()
-                continue
-            if self.LED1.is_lit:
-                self.LED1.off()
-            if packet.mode == 1:
-                logger.warning('No GPS fix yet - %s', packet)
-                self.LED1.blink(on_time=0.1, off_time=0.1, n=3)
-                continue
-            # else we have a fix
-            if fh is None:
-                # if the file hasn't been opened yet, open it
-                logger.info(
-                    'Got GPS packet with fix; GPS time is %s (UTC)'
-                    '' % packet.get_time()
+
+    def _handle_no_fix(self, packet: GpsResponse):
+        logger.warning('No GPS fix yet - %s', packet)
+        self.LED1.blink(on_time=0.1, off_time=0.1, n=3)
+        if self._display is not None:
+            self._display.clear()
+            self._display.set_heading(
+                datetime.utcnow().strftime('%H:%M:%S UTC')
+            )
+            self._display.set_status('no fix yet; waiting...')
+            if self._extra_data_instance is not None:
+                self._display.set_extradata(
+                    self._extra_data_instance.data.get('message', '')
                 )
-                outfile = os.path.join(
-                    self.outdir,
-                    '%s.json' % packet.get_time().strftime('%Y-%m-%d_%H-%M-%S')
+
+    def _ensure_file_open(self, packet: GpsResponse):
+        if self._fh is not None:
+            return
+        logger.info(
+            'Got GPS packet with fix; GPS time is %s (UTC)'
+            '' % packet.get_time()
+        )
+        outfile = os.path.join(
+            self.outdir,
+            '%s.json' % packet.get_time().strftime('%Y-%m-%d_%H-%M-%S')
+        )
+        logger.info('Writing output to: %s', outfile)
+        self._fh = open(outfile, 'w', buffering=1)
+
+    def _handle_2d_fix(self, packet: GpsResponse):
+        logger.info(packet)
+        self.LED1.blink(on_time=0.5, off_time=0.25, n=2)
+        if self._display is not None:
+            self._display.clear()
+            self._display.set_heading(
+                packet.get_time().strftime('%H:%M:%S UTC')
+            )
+            self._display.set_status('2D Fix; %s,%s' % packet.position_precision())
+            lat, lon = packet.position()
+            self._display.set_lat('Lat %s' % lat)
+            self._display.set_lon('Lon %s' % lon)
+            if self._extra_data_instance is not None:
+                self._display.set_extradata(
+                    self._extra_data_instance.data.get('message', '')
                 )
-                logger.info('Writing output to: %s', outfile)
-                fh = open(outfile, 'w', buffering=1)
-            if packet.mode == 2:
-                # 2D Fix
-                logger.info(packet)
-                self.LED1.blink(on_time=0.5, off_time=0.25, n=2)
-            elif packet.mode == 3:
-                # 3D Fix
-                logger.info(packet)
-                self.LED1.blink(on_time=0.5, off_time=0.25, n=1)
-            fh.write('%s\n' % json.dumps(packet.raw_packet))
-            if self.flush_file:
-                fh.flush()
-            self.LED2.blink(on_time=0.25, off_time=0.25, n=1)
 
+    def _handle_3d_fix(self, packet: GpsResponse):
+        logger.info(packet)
+        self.LED1.blink(on_time=0.5, off_time=0.25, n=1)
+        if self._display is not None:
+            self._display.clear()
+            self._display.set_heading(
+                packet.get_time().strftime('%H:%M:%S UTC')
+            )
+            self._display.set_status('3D Fix; %s,%s' % packet.position_precision())
+            lat, lon = packet.position()
+            self._display.set_lat('Lat %s' % lat)
+            self._display.set_lon('Lon %s' % lon)
+            if self._extra_data_instance is not None:
+                self._display.set_extradata(
+                    self._extra_data_instance.data.get('message', '')
+                )
 
-def set_log_info(logger):
-    """
-    set logger level to INFO via :py:func:`~.set_log_level_format`.
-    """
-    set_log_level_format(logger, logging.INFO,
-                         '%(asctime)s %(levelname)s:%(name)s:%(message)s')
-
-
-def set_log_debug(logger):
-    """
-    set logger level to DEBUG, and debug-level output format,
-    via :py:func:`~.set_log_level_format`.
-    """
-    set_log_level_format(
-        logger,
-        logging.DEBUG,
-        "%(asctime)s [%(levelname)s %(filename)s:%(lineno)s - "
-        "%(name)s.%(funcName)s() ] %(message)s"
-    )
-
-
-def set_log_level_format(logger, level, format):
-    """
-    Set logger level and format.
-
-    :param logger: the logger object to set on
-    :type logger: logging.Logger
-    :param level: logging level; see the :py:mod:`logging` constants.
-    :type level: int
-    :param format: logging formatter format string
-    :type format: str
-    """
-    formatter = logging.Formatter(fmt=format)
-    logger.handlers[0].setFormatter(formatter)
-    logger.setLevel(level)
+    def _handle_packet(self, packet: GpsResponse):
+        if packet.mode == 0:
+            return self._handle_waiting_gps(packet)
+        if self.LED1.is_lit:
+            self.LED1.off()
+        if packet.mode == 1:
+            return self._handle_no_fix(packet)
+        # else we have a fix
+        self._ensure_file_open(packet)
+        if packet.mode == 2:
+            self._handle_2d_fix(packet)
+        elif packet.mode == 3:
+            self._handle_3d_fix(packet)
+        if self._extra_data_instance is not None:
+            packet.raw_packet['_extra_data'] = self._extra_data_instance.data
+        self._fh.write('%s\n' % json.dumps(packet.raw_packet))
+        if self.flush_file:
+            self._fh.flush()
+        self.LED2.blink(on_time=0.25, off_time=0.25, n=1)
 
 
 def main():

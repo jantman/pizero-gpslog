@@ -35,6 +35,29 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
+import logging
+from pizero_gpslog.extradata.base import BaseExtraDataProvider
+from time import time, sleep
+from datetime import datetime
 
-VERSION = '1.0.0'
-PROJECT_URL = 'https://github.com/jantman/pizero-gpslog'
+logger = logging.getLogger(__name__)
+
+
+class DummyData(BaseExtraDataProvider):
+
+    def __init__(self):
+        super().__init__()
+
+    def run(self):
+        logger.debug('Running DummyData extra data provider...')
+        while True:
+            dt = datetime.now()
+            hms = dt.strftime('%H:%M:%W')
+            self._data = {
+                'message': f'updated at {hms}',
+                'data': {
+                    'hms': hms,
+                    'time': time()
+                }
+            }
+            sleep(2)

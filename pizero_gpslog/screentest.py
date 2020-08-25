@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding:utf-8 -*-
 """
 The latest version of this package is available at:
 <http://github.com/jantman/pizero-gpslog>
@@ -35,6 +37,40 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
+import os
+import logging
+import time
+from datetime import datetime
+from pizero_gpslog.displaymanager import DisplayManager
+from pizero_gpslog.utils import set_log_debug
 
-VERSION = '1.0.0'
-PROJECT_URL = 'https://github.com/jantman/pizero-gpslog'
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger()
+set_log_debug(logger)
+
+
+def main():
+    if 'DISPLAY_CLASS' not in os.environ:
+        logger.warning(
+            'DISPLAY_CLASS environment variable not set; using default dummy'
+        )
+        os.environ[
+            'DISPLAY_CLASS'
+        ] = 'pizero_gpslog.displays.dummy:DummyDisplay'
+    modname, clsname = os.environ['DISPLAY_CLASS'].split(':')
+    dm = DisplayManager(modname, clsname)
+    dm.start()
+    for i in range(0, 10):
+        logger.info('OUTER sleep 5s')
+        time.sleep(5)
+        logger.info('OUTER set display')
+        dm.set_heading(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        dm.set_status('A' + (f'{i}' * 19))
+        dm.set_lat('B' + (f'{i}' * 19))
+        dm.set_lon('C' + (f'{i}' * 19))
+        dm.set_extradata('D' + (f'{i}' * 19))
+    logger.info('OUTER Finished display-setting loop')
+
+
+if __name__ == "__main__":
+    main()

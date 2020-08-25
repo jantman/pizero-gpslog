@@ -3,7 +3,7 @@ The latest version of this package is available at:
 <http://github.com/jantman/pizero-gpslog>
 
 ##################################################################################
-Copyright 2018 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
+Copyright 2018-2020 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
     This file is part of pizero-gpslog, also known as pizero-gpslog.
 
@@ -42,6 +42,7 @@ import argparse
 from distutils.spawn import find_executable
 from textwrap import dedent
 from subprocess import run
+from pizero_gpslog.utils import set_log_debug
 
 FORMAT = "[%(asctime)s %(levelname)s] %(message)s"
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -176,49 +177,12 @@ def parse_args(argv):
     return args
 
 
-def set_log_info(logger):
-    """
-    set logger level to INFO via :py:func:`~.set_log_level_format`.
-    """
-    set_log_level_format(logger, logging.INFO,
-                         '%(asctime)s %(levelname)s:%(name)s:%(message)s')
-
-
-def set_log_debug(logger):
-    """
-    set logger level to DEBUG, and debug-level output format,
-    via :py:func:`~.set_log_level_format`.
-    """
-    set_log_level_format(
-        logger,
-        logging.DEBUG,
-        "%(asctime)s [%(levelname)s %(filename)s:%(lineno)s - "
-        "%(name)s.%(funcName)s() ] %(message)s"
-    )
-
-
-def set_log_level_format(logger, level, format):
-    """
-    Set logger level and format.
-
-    :param logger: the logger object to set on
-    :type logger: logging.Logger
-    :param level: logging level; see the :py:mod:`logging` constants.
-    :type level: int
-    :param format: logging formatter format string
-    :type format: str
-    """
-    formatter = logging.Formatter(fmt=format)
-    logger.handlers[0].setFormatter(formatter)
-    logger.setLevel(level)
-
-
 def main():
     args = parse_args(sys.argv[1:])
 
     # set logging level
     if args.verbose:
-        set_log_debug()
+        set_log_debug(logger)
 
     Installer(args).run()
 

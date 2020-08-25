@@ -2,8 +2,8 @@
 The latest version of this package is available at:
 <http://github.com/jantman/pizero-gpslog>
 
-##################################################################################
-Copyright 2018 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
+################################################################################
+Copyright 2018-2020 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
     This file is part of pizero-gpslog, also known as pizero-gpslog.
 
@@ -23,16 +23,16 @@ Copyright 2018 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 The Copyright and Authors attributions contained herein may not be removed or
 otherwise altered, except to add the Author attribution of a contributor to
 this work. (Additional Terms pursuant to Section 7b of the AGPL v3)
-##################################################################################
+################################################################################
 While not legally required, I sincerely request that anyone who finds
 bugs please submit them at <https://github.com/jantman/pizero-gpslog> or
 to me via email, and that you send any contributions or improvements
 either as a pull request on GitHub, or to me via email.
-##################################################################################
+################################################################################
 
 AUTHORS:
 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
-##################################################################################
+################################################################################
 """
 
 import logging
@@ -47,11 +47,11 @@ class FakeLed(object):
         self._lit = False
 
     def on(self):
-        logger.warning('%s ON' % self)
+        logger.info('%s ON' % self)
         self._lit = True
 
     def off(self):
-        logger.warning('%s OFF' % self)
+        logger.info('%s OFF' % self)
         self._lit = False
 
     def blink(self, on_time=1, off_time=1, n=None, background=True):
@@ -61,12 +61,12 @@ class FakeLed(object):
             raise RuntimeError(
                 'ERROR: LED.blink not called from background!'
             )
-        logger.warning('%s BLINK on=%s off=%s n=%s background=%s',
-                       self, on_time, off_time, n, background)
+        logger.info('%s BLINK on=%s off=%s n=%s background=%s',
+                    self, on_time, off_time, n, background)
         self._lit = False
 
     def toggle(self):
-        logger.warning('%s TOGGLE' % self)
+        logger.info('%s TOGGLE' % self)
         self._lit = not self._lit
 
     @property

@@ -35,6 +35,46 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
+import logging
+from pizero_gpslog.displays.base import BaseDisplay
+from typing import ClassVar
+import time
+import os
 
-VERSION = '1.0.0'
-PROJECT_URL = 'https://github.com/jantman/pizero-gpslog'
+logger = logging.getLogger(__name__)
+
+
+class DummyDisplay(BaseDisplay):
+
+    #: width of the display in characters
+    width_chars: ClassVar[int] = 21
+
+    #: height of the display in lines
+    height_lines: ClassVar[int] = 5
+
+    #: the minimum number of seconds between refreshes of the display
+    min_refresh_seconds: ClassVar[int] = 15
+
+    def __init__(self):
+        super().__init__()
+        self.sleep_time: int = int(os.environ.get('DUMMY_SLEEP_TIME', '2'))
+        logger.debug(
+            'Initialize DummyDisplay; sleep time (%d sec) set by '
+            'DUMMY_SLEEP_TIME environment variable.'
+        )
+
+    def update_display(self):
+        """
+        Write ``self._lines`` to the display.
+        """
+        fmt: str = 'DUMMYDISPLAY>|%-' + '%ds|' % self.width_chars
+        for line in self._lines:
+            logger.warning(fmt, line)
+        logger.debug('Dummy display sleeping %d seconds...', self.sleep_time)
+        time.sleep(self.sleep_time)
+
+    def clear(self):
+        logger.warning('------ DUMMYDISPLAY CLEAR -------')
+
+    def __del__(self):
+        logger.warning('DUMMYDISPLAY __del__')

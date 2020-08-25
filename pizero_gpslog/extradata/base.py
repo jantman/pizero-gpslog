@@ -35,6 +35,29 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
+from abc import ABC, abstractmethod
+import logging
+from threading import Thread
 
-VERSION = '1.0.0'
-PROJECT_URL = 'https://github.com/jantman/pizero-gpslog'
+logger = logging.getLogger(__name__)
+
+
+class BaseExtraDataProvider(ABC, Thread):
+    """
+    Base class for all extra data providers.
+
+    ``self._data`` should be a dict with a ``message`` key that has a string
+    value, and a ``data`` key that has an arbitrary JSON-encodable value.
+    """
+
+    def __init__(self):
+        self._data = {}
+        super().__init__(name='ExtraDataProvider', daemon=True)
+
+    @property
+    def data(self):
+        return self._data
+
+    @abstractmethod
+    def run(self):
+        raise NotImplementedError()
