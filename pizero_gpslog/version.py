@@ -36,5 +36,5 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 """
 
 
-VERSION = '0.2.0'
+VERSION = '1.0.0'
 PROJECT_URL = 'https://github.com/jantman/pizero-gpslog'

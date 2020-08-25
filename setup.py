@@ -49,7 +49,7 @@ requires = [
 ]
 
 classifiers = [
-    'Development Status :: 3 - Alpha',
+    'Development Status :: 5 - Production/Stable',
     'Environment :: No Input/Output (Daemon)',
     'Intended Audience :: End Users/Desktop',
     'Natural Language :: English',
@@ -59,9 +59,9 @@ classifiers = [
     'Topic :: Utilities',
     'License :: OSI Approved :: GNU Affero General Public License '
     'v3 or later (AGPLv3+)',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
 ]
 
 setup(

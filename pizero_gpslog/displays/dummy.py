@@ -68,8 +68,8 @@ class DummyDisplay(BaseDisplay):
         Write ``self._lines`` to the display.
         """
         fmt: str = 'DUMMYDISPLAY>|%-' + '%ds|' % self.width_chars
-        for l in self._lines:
-            logger.warning(fmt, l)
+        for line in self._lines:
+            logger.warning(fmt, line)
         logger.debug('Dummy display sleeping %d seconds...', self.sleep_time)
         time.sleep(self.sleep_time)
 
