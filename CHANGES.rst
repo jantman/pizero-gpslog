@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.1.0 (2020-09-11)
+------------------
+
+* Fix ``pizero_gpslog.extradata.gq_gmc500plus:GqGMC500plus`` to handle disconnect/reconnect of USB device.
+
 1.0.0 (2020-08-25)
 ------------------
 
