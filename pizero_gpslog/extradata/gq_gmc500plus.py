@@ -68,11 +68,16 @@ class GqGMC500plus(BaseExtraDataProvider):
         self._original_devname = devname
         self._gmc = None
         self._data = self._default_response()
+        self._sleep_time = int(os.environ.get('GMC_SLEEP_SEC', '5'))
+        logger.info(
+            'Sleeping %d seconds between GMC polls; override by setting '
+            'GMC_SLEEP_SEC environment variable as an int', self._sleep_time
+        )
         self._init_gmc()
 
     def _default_response(self):
         return {
-            'message': f'No GMC Connected',
+            'message': f'',
             'data': {
                 'time': time(),
                 'cps': None,
@@ -100,11 +105,6 @@ class GqGMC500plus(BaseExtraDataProvider):
             return
         self._devname = devname
         logger.info('Using device: %s', devname)
-        self._sleep_time = int(os.environ.get('GMC_SLEEP_SEC', '5'))
-        logger.info(
-            'Sleeping %d seconds between GMC polls; override by setting '
-            'GMC_SLEEP_SEC environment variable as an int', self._sleep_time
-        )
         self._gmc = None
         logger.debug('Connecting to GMC...')
         self._gmc = GMC(config_update={'DEFAULT_PORT': self._devname})
@@ -137,9 +137,6 @@ class GqGMC500plus(BaseExtraDataProvider):
             sleep(10)
 
     def run(self):
-        if self._devname is None:
-            logger.critical('No GMC-500 found; exiting thread')
-            return
         logger.debug('Running extra data provider...')
         while True:
             try:

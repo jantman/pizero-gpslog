@@ -133,7 +133,7 @@ class Adafruit4567(BaseDisplay):
         # else we don't have extradata, so we have an extra line...
         return self._write_lines([
             dts,
-            f'{ft} {fix_precision[0]:.7},{fix_precision[1]:.7}',
+            f'{ft} fix: {fix_precision[0]:.7},{fix_precision[1]:.7}',
             f'Lat: {lat:.15}',
             f'Lon: {lon:.15}'
         ])
