@@ -104,36 +104,39 @@ class Adafruit4567(BaseDisplay):
         if should_clear:
             self.clear()
         dts = dt.strftime('%H:%M:%S Z')
-        lines = ['', '', '', '']
         if fix_type == FixType.NO_GPS:
-            lines = [
+            return self._write_lines([
                 dts,
                 'No GPS yet',
                 '',
                 extradata
-            ]
-        elif fix_type == FixType.NO_FIX:
-            lines = [
+            ])
+        if fix_type == FixType.NO_FIX:
+            return self._write_lines([
                 dts,
                 'No Fix yet',
                 '',
                 extradata
-            ]
-        elif fix_type == FixType.FIX_2D:
-            lines = [
-                dts + ' | 2D fix',
-                f'Lat: {lat:.15}',
-                f'Lon: {lon:.15}',
-                extradata
-            ]
+            ])
+        ft = '??'
+        if fix_type == FixType.FIX_2D:
+            ft = '2D'
         elif fix_type == FixType.FIX_3D:
-            lines = [
-                dts + ' | 3D fix',
+            ft = '3D'
+        if extradata is not None and extradata.strip() != '':
+            return self._write_lines([
+                dts + f' | {ft} fix',
                 f'Lat: {lat:.15}',
                 f'Lon: {lon:.15}',
                 extradata
-            ]
-        self._write_lines(lines)
+            ])
+        # else we don't have extradata, so we have an extra line...
+        return self._write_lines([
+            dts,
+            f'{ft} {fix_precision[0]:.7},{fix_precision[1]:.7}',
+            f'Lat: {lat:.15}',
+            f'Lon: {lon:.15}'
+        ])
 
     def _write_lines(self, lines):
         logging.info('Begin update display')
