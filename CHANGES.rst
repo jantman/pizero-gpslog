@@ -5,6 +5,7 @@ Changelog
 ------------------
 
 * Fix ``pizero_gpslog.extradata.gq_gmc500plus:GqGMC500plus`` to handle disconnect/reconnect of USB device.
+* Add support for the Adafruit 4567 OLED display.
 
 1.0.0 (2020-08-25)
 ------------------
