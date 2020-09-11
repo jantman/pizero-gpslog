@@ -39,7 +39,7 @@ from abc import ABC, abstractmethod
 import logging
 from PIL import ImageFont
 from pkg_resources import resource_filename
-from typing import ClassVar, List, Tuple
+from typing import ClassVar, Tuple
 from pizero_gpslog.utils import FixType
 from datetime import datetime
 

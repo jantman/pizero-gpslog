@@ -41,7 +41,6 @@ from importlib import import_module
 import time
 from threading import Thread
 from typing import Optional, Tuple
-from enum import Enum
 from datetime import datetime, timezone
 from pizero_gpslog.displays.base import BaseDisplay
 from pizero_gpslog.utils import ThreadSafeValue, FixType

@@ -77,7 +77,7 @@ class GqGMC500plus(BaseExtraDataProvider):
 
     def _default_response(self):
         return {
-            'message': f'',
+            'message': '',
             'data': {
                 'time': time(),
                 'cps': None,

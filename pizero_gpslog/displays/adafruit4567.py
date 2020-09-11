@@ -45,16 +45,15 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-import time
 import logging
-from typing import Optional, ClassVar, Tuple
+from typing import ClassVar, Tuple
 from board import SCL, SDA, D4
 import busio
 import digitalio
 import adafruit_ssd1305
 from pizero_gpslog.displays.base import BaseDisplay
 from pizero_gpslog.utils import FixType
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -95,7 +94,6 @@ class Adafruit4567(BaseDisplay):
         )
         self._top = -2
         self._font = BaseDisplay.font(8)
-        #self._font = ImageFont.load_default()
 
     def update_display(
         self, fix_type: FixType, lat: float, lon: float, extradata: str,
