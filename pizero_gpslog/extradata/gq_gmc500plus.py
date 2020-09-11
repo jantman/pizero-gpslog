@@ -65,8 +65,37 @@ class GqGMC500plus(BaseExtraDataProvider):
 
     def __init__(self, devname=None):
         super().__init__()
-        if devname is None:
+        self._original_devname = devname
+        self._gmc = None
+        self._data = self._default_response()
+        self._sleep_time = int(os.environ.get('GMC_SLEEP_SEC', '5'))
+        logger.info(
+            'Sleeping %d seconds between GMC polls; override by setting '
+            'GMC_SLEEP_SEC environment variable as an int', self._sleep_time
+        )
+        self._init_gmc()
+
+    def _default_response(self):
+        return {
+            'message': '',
+            'data': {
+                'time': time(),
+                'cps': None,
+                'cpsl': None,
+                'cpsh': None,
+                'cpm': None,
+                'cpml': None,
+                'cpmh': None,
+                'maxcps': None,
+                'calibration': None
+            }
+        }
+
+    def _try_init(self):
+        if self._original_devname is None:
             devname = self._find_usb_device()
+        else:
+            devname = self._original_devname
         if devname is None:
             logger.critical(
                 'ERROR: No devname given, and could not determine GMC-500+ '
@@ -76,15 +105,6 @@ class GqGMC500plus(BaseExtraDataProvider):
             return
         self._devname = devname
         logger.info('Using device: %s', devname)
-        self._sleep_time = int(os.environ.get('GMC_SLEEP_SEC', '5'))
-        logger.info(
-            'Sleeping %d seconds between GMC polls; override by setting '
-            'GMC_SLEEP_SEC environment variable as an int', self._sleep_time
-        )
-        self._gmc = None
-        self._init_gmc()
-
-    def _init_gmc(self):
         self._gmc = None
         logger.debug('Connecting to GMC...')
         self._gmc = GMC(config_update={'DEFAULT_PORT': self._devname})
@@ -103,10 +123,20 @@ class GqGMC500plus(BaseExtraDataProvider):
             x: self._config[x] for x in calib_fields
         }
 
-    def run(self):
-        if self._devname is None:
-            logger.critical('No GMC-500 found; exiting thread')
+    def _init_gmc(self):
+        self._gmc = None
+        self._data = self._default_response()
+        try:
+            self._try_init()
             return
+        except Exception as ex:
+            logger.critical(
+                'Error initializing GMC; try again in 10s', ex
+            )
+            logger.debug('GMC init error: %s', ex, exc_info=True)
+            sleep(10)
+
+    def run(self):
         logger.debug('Running extra data provider...')
         while True:
             try:
@@ -136,6 +166,7 @@ class GqGMC500plus(BaseExtraDataProvider):
                 logger.error(
                     'Error querying GMC; re-init. Error: %s', ex, exc_info=True
                 )
+                self._data = self._default_response()
                 self._init_gmc()
             sleep(self._sleep_time)
 

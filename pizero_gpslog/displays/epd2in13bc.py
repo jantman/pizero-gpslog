@@ -77,8 +77,10 @@ import time
 import logging
 import spidev
 import RPi.GPIO
-from typing import Optional, ClassVar
+from typing import Optional, ClassVar, Tuple
 from pizero_gpslog.displays.base import BaseDisplay
+from pizero_gpslog.utils import FixType
+from datetime import datetime
 from PIL import Image, ImageDraw
 
 
@@ -242,15 +244,38 @@ class EPD2in13bc(BaseDisplay):
         self._wait_for_not_busy()
         logger.debug('Done refreshing')
 
-    def update_display(self):
+    def update_display(
+        self, fix_type: FixType, lat: float, lon: float, extradata: str,
+        fix_precision: Tuple[float, float], dt: datetime, should_clear: bool
+    ):
+        if should_clear:
+            self.clear()
+        lines = [dt.strftime('%H:%M:%S UTC')]
+        if fix_type == FixType.NO_GPS:
+            lines.extend(['No GPS yet', '', ''])
+        elif fix_type == FixType.NO_FIX:
+            lines.extend(['No Fix yet', '', ''])
+        else:
+            ft = '??'
+            if fix_type == FixType.FIX_2D:
+                ft = '2D'
+            elif fix_type == FixType.FIX_3D:
+                ft = '3D'
+            lines.append(f'{ft} {fix_precision[0]:.8},{fix_precision[1]:.8}')
+            lines.append(f'Lat: {lat:.15}')
+            lines.append(f'Lon: {lon:.15}')
+        lines.append(extradata)
+        self._write_lines(lines)
+
+    def _write_lines(self, lines):
         """
-        Write ``self._lines`` to the display.
+        Write ``lines`` to the display.
         """
         logging.info('Begin update display')
         font = self.font(16)
         HBlackimage = Image.new('1', (self._height, self._width), 255)
         drawblack = ImageDraw.Draw(HBlackimage)
-        for idx, content in enumerate(self._lines):
+        for idx, content in enumerate(lines):
             drawblack.text(
                 (0, 20 * idx), content, font=font, fill=0
             )

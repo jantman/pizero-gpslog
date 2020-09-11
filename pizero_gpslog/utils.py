@@ -1,6 +1,7 @@
 from threading import Lock
 from copy import copy
 import logging
+from enum import Enum
 
 
 class ThreadSafeValue:
@@ -23,6 +24,14 @@ class ThreadSafeValue:
         finally:
             self._lock.release()
         return result
+
+
+class FixType(Enum):
+
+    NO_GPS = 0
+    NO_FIX = 1
+    FIX_2D = 2
+    FIX_3D = 3
 
 
 def set_log_info(log: logging.Logger):

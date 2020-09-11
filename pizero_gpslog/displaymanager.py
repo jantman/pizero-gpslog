@@ -40,10 +40,10 @@ import logging
 from importlib import import_module
 import time
 from threading import Thread
-from typing import Optional, List
-from pizero_gpslog.version import VERSION, PROJECT_URL
+from typing import Optional, Tuple
+from datetime import datetime, timezone
 from pizero_gpslog.displays.base import BaseDisplay
-from pizero_gpslog.utils import ThreadSafeValue
+from pizero_gpslog.utils import ThreadSafeValue, FixType
 
 logger = logging.getLogger(__name__)
 
@@ -51,17 +51,18 @@ logger = logging.getLogger(__name__)
 class DisplayWriterThread(Thread):
 
     def __init__(
-        self, driver_cls: BaseDisplay.__class__, status: ThreadSafeValue,
+        self, driver_cls: BaseDisplay.__class__, fix_type: ThreadSafeValue,
         lat: ThreadSafeValue, lon: ThreadSafeValue,
-        extradata: ThreadSafeValue, heading: ThreadSafeValue,
-        refresh_sec: int = 0
+        extradata: ThreadSafeValue, fix_precision: ThreadSafeValue,
+        should_clear: ThreadSafeValue, refresh_sec: int = 0
     ):
         super().__init__(name='DisplayWriter', daemon=True)
-        self._status: ThreadSafeValue = status
+        self._fix_type: ThreadSafeValue = fix_type
         self._lat: ThreadSafeValue = lat
         self._lon: ThreadSafeValue = lon
         self._extradata: ThreadSafeValue = extradata
-        self._heading: ThreadSafeValue = heading
+        self._fix_precision: ThreadSafeValue = fix_precision
+        self._should_clear: ThreadSafeValue = should_clear
         self._driver_cls: BaseDisplay.__class__ = driver_cls
         self._refresh_sec = refresh_sec
         logger.info(
@@ -93,97 +94,55 @@ class DisplayWriterThread(Thread):
                 time.sleep(t)
 
     def iteration(self, driver: BaseDisplay):
-        driver.set_line(0, self._heading.get())
-        driver.set_line(1, self._status.get())
-        driver.set_line(2, self._lat.get())
-        driver.set_line(3, self._lon.get())
-        driver.set_line(4, self._extradata.get())
-        driver.update_display()
+        driver.update_display(
+            fix_type=self._fix_type.get(),
+            fix_precision=self._fix_precision.get(),
+            lat=self._lat.get(), lon=self._lon.get(),
+            extradata=self._extradata.get(),
+            dt=datetime.now(timezone.utc),
+            should_clear=self._should_clear.get()
+        )
+        self._should_clear.set(False)
 
 
 class DisplayManager:
-    """
-    We expect a display to have 5 lines. From top to bottom:
-
-    heading
-    status
-    lat
-    lon
-    extradata
-
-    If a given display supports less than 5 lines, the presedence is:
-    lat
-    lon
-    status
-    extradata
-    heading
-    """
 
     def __init__(self, modname: str, clsname: str):
-        self._status: ThreadSafeValue = ThreadSafeValue()
+        self._fix_type: ThreadSafeValue = ThreadSafeValue(FixType.NO_GPS)
+        self._fix_precision: ThreadSafeValue = ThreadSafeValue((0.0, 0.0))
         self._lat: ThreadSafeValue = ThreadSafeValue()
         self._lon: ThreadSafeValue = ThreadSafeValue()
         self._extradata: ThreadSafeValue = ThreadSafeValue()
-        self._heading: ThreadSafeValue = ThreadSafeValue()
+        self._should_clear: ThreadSafeValue = ThreadSafeValue(False)
         self._writer_thread: Optional[DisplayWriterThread] = None
         logger.debug('Import %s:%s', modname, clsname)
         mod = import_module(modname)
         self._driver_cls: BaseDisplay.__class__ = getattr(mod, clsname)
-        # set the initial text
-        self.set_filled_text(
-            f'pizero-gpslog v{VERSION}\n{PROJECT_URL}\nstarting....'
-        )
+        self.clear()
 
     def start(self):
         refresh_sec = int(os.environ.get('DISPLAY_REFRESH_SEC', '0'))
         self._writer_thread = DisplayWriterThread(
-            self._driver_cls, self._status, self._lat, self._lon,
-            self._extradata, self._heading, refresh_sec=refresh_sec
+            self._driver_cls, self._fix_type, self._lat, self._lon,
+            self._extradata, self._fix_precision, self._should_clear,
+            refresh_sec=refresh_sec
         )
         self._writer_thread.start()
 
-    def set_status(self, s: str):
-        self._status.set(s)
+    def set_fix_type(self, gps_status: FixType):
+        self._fix_type.set(gps_status)
 
-    def set_lat(self, s: str):
-        self._lat.set(s)
+    def set_fix_precision(self, precision: Tuple[float, float]):
+        self._fix_precision.set(precision)
 
-    def set_lon(self, s: str):
-        self._lon.set(s)
+    def set_lat(self, lat: float):
+        self._lat.set(lat)
+
+    def set_lon(self, lon: float):
+        self._lon.set(lon)
 
     def set_extradata(self, s: str):
         self._extradata.set(s)
 
-    def set_heading(self, s: str):
-        self._heading.set(s)
-
-    def set_filled_text(self, s: str):
-        chars: int = self._driver_cls.width_chars
-        lines: int = self._driver_cls.height_lines
-        slots: List[str] = []
-        parts = s.split("\n")
-        for p in parts:
-            if len(p) <= chars:
-                slots.append(p)
-                continue
-            # we have a line that needs to wrap
-            chunks = [p[i:i + chars] for i in range(0, len(p), chars)]
-            slots.extend(chunks)
-        if len(slots) > lines:
-            removed = slots[lines:]
-            slots = slots[:lines]
-            logger.warning('Filled text overflowed. Removed: %s', removed)
-        while len(slots) < 5:
-            slots.append('')
-        self._heading.set(slots[0])
-        self._status.set(slots[1])
-        self._lat.set(slots[2])
-        self._lon.set(slots[3])
-        self._extradata.set(slots[4])
-
     def clear(self):
-        self._status.set('')
-        self._lat.set('')
-        self._lon.set('')
-        self._extradata.set('')
-        self._heading.set('')
+        self._should_clear.set(True)
