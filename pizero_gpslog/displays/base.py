@@ -64,7 +64,7 @@ class BaseDisplay(ABC):
         get the display ready to call :py:meth:`~.display`, including clearing
         the display if required.
         """
-        self._lines: List[str] = ['' for x in range(0, self.height_lines)]
+        self._lines: List[str] = ['' for x in range(0, 5)]
 
     @staticmethod
     def font(size_pts: int = 20) -> ImageFont.FreeTypeFont:
