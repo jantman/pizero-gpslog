@@ -41,14 +41,13 @@ import time
 import json
 from typing import Optional
 from _io import TextIOWrapper
-from datetime import datetime
 from importlib import import_module
 
 from pizero_gpslog.gpsd import (
     GpsClient, NoActiveGpsError, NoFixError, GpsResponse
 )
 from pizero_gpslog.version import VERSION, PROJECT_URL
-from pizero_gpslog.utils import set_log_info, set_log_debug
+from pizero_gpslog.utils import set_log_info, set_log_debug, FixType
 from pizero_gpslog.displaymanager import DisplayManager
 from pizero_gpslog.extradata.base import BaseExtraDataProvider
 
@@ -58,6 +57,15 @@ else:
     from pizero_gpslog.fakeled import FakeLed as LED
 
 logger = logging.getLogger(__name__)
+
+
+class EmptyExtraData:
+
+    def __init__(self):
+        self.data = {'message': ''}
+
+    def start(self):
+        pass
 
 
 class GpsLogger(object):
@@ -87,8 +95,8 @@ class GpsLogger(object):
         if 'DISPLAY_CLASS' in os.environ:
             modname, clsname = os.environ['DISPLAY_CLASS'].split(':')
             self._display = DisplayManager(modname, clsname)
+            self._display.set_fix_type(FixType.NO_GPS)
             self._display.start()
-        self._extra_data_instance = None
         if 'EXTRA_DATA_CLASS' in os.environ:
             modname, clsname = os.environ['EXTRA_DATA_CLASS'].split(':')
             logger.debug('Import %s:%s', modname, clsname)
@@ -98,6 +106,8 @@ class GpsLogger(object):
             )
             self._extra_data_instance = extra_cls()
             self._extra_data_instance.start()
+        else:
+            self._extra_data_instance = EmptyExtraData()
 
     def run(self):
         self.LED2.off()
@@ -122,29 +132,19 @@ class GpsLogger(object):
         if not self.LED1.is_lit:
             self.LED1.on()
         if self._display is not None:
-            self._display.clear()
-            self._display.set_heading(
-                datetime.utcnow().strftime('%H:%M:%S UTC')
+            self._display.set_fix_type(FixType.NO_GPS)
+            self._display.set_extradata(
+                self._extra_data_instance.data.get('message', '')
             )
-            self._display.set_status('no active GPS. waiting...')
-            if self._extra_data_instance is not None:
-                self._display.set_extradata(
-                    self._extra_data_instance.data.get('message', '')
-                )
 
     def _handle_no_fix(self, packet: GpsResponse):
         logger.warning('No GPS fix yet - %s', packet)
         self.LED1.blink(on_time=0.1, off_time=0.1, n=3)
         if self._display is not None:
-            self._display.clear()
-            self._display.set_heading(
-                datetime.utcnow().strftime('%H:%M:%S UTC')
+            self._display.set_fix_type(FixType.NO_FIX)
+            self._display.set_extradata(
+                self._extra_data_instance.data.get('message', '')
             )
-            self._display.set_status('no fix yet; waiting...')
-            if self._extra_data_instance is not None:
-                self._display.set_extradata(
-                    self._extra_data_instance.data.get('message', '')
-                )
 
     def _ensure_file_open(self, packet: GpsResponse):
         if self._fh is not None:
@@ -160,39 +160,24 @@ class GpsLogger(object):
         logger.info('Writing output to: %s', outfile)
         self._fh = open(outfile, 'w', buffering=1)
 
-    def _handle_2d_fix(self, packet: GpsResponse):
+    def _handle_fix(self, packet: GpsResponse):
         logger.info(packet)
-        self.LED1.blink(on_time=0.5, off_time=0.25, n=2)
+        if packet.mode == 2:
+            self.LED1.blink(on_time=0.5, off_time=0.25, n=2)
+            if self._display is not None:
+                self._display.set_fix_type(FixType.FIX_2D)
+        elif packet.mode == 3:
+            self.LED1.blink(on_time=0.5, off_time=0.25, n=1)
+            if self._display is not None:
+                self._display.set_fix_type(FixType.FIX_3D)
         if self._display is not None:
-            self._display.clear()
-            self._display.set_heading(
-                packet.get_time().strftime('%H:%M:%S UTC')
-            )
-            self._display.set_status('2D Fix; %s,%s' % packet.position_precision())
+            self._display.set_fix_precision(packet.position_precision())
             lat, lon = packet.position()
-            self._display.set_lat('Lat %s' % lat)
-            self._display.set_lon('Lon %s' % lon)
-            if self._extra_data_instance is not None:
-                self._display.set_extradata(
-                    self._extra_data_instance.data.get('message', '')
-                )
-
-    def _handle_3d_fix(self, packet: GpsResponse):
-        logger.info(packet)
-        self.LED1.blink(on_time=0.5, off_time=0.25, n=1)
-        if self._display is not None:
-            self._display.clear()
-            self._display.set_heading(
-                packet.get_time().strftime('%H:%M:%S UTC')
+            self._display.set_lat(lat)
+            self._display.set_lon(lon)
+            self._display.set_extradata(
+                self._extra_data_instance.data.get('message', '')
             )
-            self._display.set_status('3D Fix; %s,%s' % packet.position_precision())
-            lat, lon = packet.position()
-            self._display.set_lat('Lat %s' % lat)
-            self._display.set_lon('Lon %s' % lon)
-            if self._extra_data_instance is not None:
-                self._display.set_extradata(
-                    self._extra_data_instance.data.get('message', '')
-                )
 
     def _handle_packet(self, packet: GpsResponse):
         if packet.mode == 0:
@@ -203,10 +188,8 @@ class GpsLogger(object):
             return self._handle_no_fix(packet)
         # else we have a fix
         self._ensure_file_open(packet)
-        if packet.mode == 2:
-            self._handle_2d_fix(packet)
-        elif packet.mode == 3:
-            self._handle_3d_fix(packet)
+        if packet.mode in [2, 3]:
+            self._handle_fix(packet)
         if self._extra_data_instance is not None:
             packet.raw_packet['_extra_data'] = self._extra_data_instance.data
         self._fh.write('%s\n' % json.dumps(packet.raw_packet))

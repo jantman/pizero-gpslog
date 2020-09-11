@@ -39,7 +39,9 @@ from abc import ABC, abstractmethod
 import logging
 from PIL import ImageFont
 from pkg_resources import resource_filename
-from typing import ClassVar, List
+from typing import ClassVar, List, Tuple
+from pizero_gpslog.utils import FixType
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -64,31 +66,18 @@ class BaseDisplay(ABC):
         get the display ready to call :py:meth:`~.display`, including clearing
         the display if required.
         """
-        self._lines: List[str] = ['' for x in range(0, 5)]
+        pass
 
     @staticmethod
     def font(size_pts: int = 20) -> ImageFont.FreeTypeFont:
         f = resource_filename('pizero_gpslog', 'DejaVuSansMono.ttf')
         return ImageFont.truetype(f, size_pts)
 
-    def set_line(self, line_num: int, content: str):
-        """
-        Set the zero-indexed display line to the given string content.
-        You must still call :py:meth:`~.display` after calling this.
-        Content will be truncated at :py:prop:`~.width_chars` characters.
-        """
-        if line_num > len(self._lines):
-            logger.error(
-                'Display only has %d lines.', len(self._lines)
-            )
-            return
-        if len(content) > self.width_chars:
-            logger.info('Truncating content "%s"', content)
-            content = content[:self.width_chars]
-        self._lines[line_num] = content
-
     @abstractmethod
-    def update_display(self):
+    def update_display(
+        self, fix_type: FixType, lat: float, lon: float, extradata: str,
+        fix_precision: Tuple[float, float], dt: datetime, should_clear: bool
+    ):
         """
         Write ``self._lines`` to the display.
         """

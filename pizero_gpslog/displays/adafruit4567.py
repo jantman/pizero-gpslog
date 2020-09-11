@@ -47,13 +47,15 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
 import time
 import logging
-from typing import Optional, ClassVar
+from typing import Optional, ClassVar, Tuple
 from board import SCL, SDA, D4
 import busio
 import digitalio
 import adafruit_ssd1305
 from pizero_gpslog.displays.base import BaseDisplay
+from pizero_gpslog.utils import FixType
 from PIL import Image, ImageDraw, ImageFont
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +66,7 @@ class Adafruit4567(BaseDisplay):
     width_chars: ClassVar[int] = 20
 
     #: height of the display in lines
-    height_lines: ClassVar[int] = 5
+    height_lines: ClassVar[int] = 4
 
     #: the minimum number of seconds between refreshes of the display
     min_refresh_seconds: ClassVar[int] = 0.1
@@ -95,18 +97,49 @@ class Adafruit4567(BaseDisplay):
         self._font = BaseDisplay.font(8)
         #self._font = ImageFont.load_default()
 
-    def update_display(self):
-        """
-        Write ``self._lines`` to the display.
-        """
+    def update_display(
+        self, fix_type: FixType, lat: float, lon: float, extradata: str,
+        fix_precision: Tuple[float, float], dt: datetime, should_clear: bool
+    ):
+        if should_clear:
+            self.clear()
+        dts = dt.strftime('%H:%M:%S Z')
+        lines = ['', '', '', '']
+        if fix_type == FixType.NO_GPS:
+            lines = [
+                dts,
+                'No GPS yet',
+                '',
+                extradata
+            ]
+        elif fix_type == FixType.NO_FIX:
+            lines = [
+                dts,
+                'No Fix yet',
+                '',
+                extradata
+            ]
+        elif fix_type == FixType.FIX_2D:
+            lines = [
+                dts + ' | 2D fix',
+                f'Lat: {lat:.15}',
+                f'Lon: {lon:.15}',
+                extradata
+            ]
+        elif fix_type == FixType.FIX_3D:
+            lines = [
+                dts + ' | 3D fix',
+                f'Lat: {lat:.15}',
+                f'Lon: {lon:.15}',
+                extradata
+            ]
+        self._write_lines(lines)
+
+    def _write_lines(self, lines):
         logging.info('Begin update display')
         self._draw.rectangle(
             (0, 0, self._width, self._height), outline=0, fill=0
         )
-        if len(self._lines) == 5 and self._lines[-1] != '':
-            lines = [self._lines[0]] + self._lines[2:5]
-        else:
-            lines = self._lines
         for idx, content in enumerate(lines):
             coords = (0, self._top + (idx * 8))
             self._draw.text(

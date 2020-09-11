@@ -6,6 +6,7 @@ Changelog
 
 * Fix ``pizero_gpslog.extradata.gq_gmc500plus:GqGMC500plus`` to handle disconnect/reconnect of USB device.
 * Add support for the Adafruit 4567 OLED display.
+* Major refactor of display support; instead of taking a list of lines, ``BaseDisplay`` subclasses now take separate values for each piece of data that can be displayed and are free to format them however works best for that particular display.
 
 1.0.0 (2020-08-25)
 ------------------

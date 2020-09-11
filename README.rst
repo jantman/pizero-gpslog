@@ -115,7 +115,7 @@ Displays can be tested with some sample data using the ``pizero-gpslog-screentes
 Your Own Display
 ++++++++++++++++
 
-pizero-gpslog can support "any" display that's capable of rendering text. By default, it expects a display capable of rendering four lines of text, each 20-characters or more long. Individual display driver classes can work around this assumption if needed. To implement a display driver class, create a subclass of ``pizero_gpslog.displays.base.BaseDisplay`` and implement at least the required methods and properties, as well as whatever internals your display needs. See the ``EPD2in13bc`` class as an example. While it is strongly encouraged for you to contribute any display drivers back to the project via pull requests, the import system used can import any class from any importable module.
+pizero-gpslog can support "any" display that's capable of rendering text. To implement a display driver class, create a subclass of ``pizero_gpslog.displays.base.BaseDisplay`` and implement at least the required methods and properties, as well as whatever internals your display needs. See the ``Adafruit4567`` class as an example. While it is strongly encouraged for you to contribute any display drivers back to the project via pull requests, the import system used can import any class from any importable module.
 
 Displays can be tested with some sample data using the ``pizero-gpslog-screentest`` entrypoint.
 
