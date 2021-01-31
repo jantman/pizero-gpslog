@@ -37,10 +37,12 @@ Requirements
 * Raspberry Pi OS with Python3 (see installation instructions below)
 * `gpsd compatible <http://www.catb.org/gpsd/hardware.html>`_ GPS (I use a `GlobalSat BU-353-S4 USB <https://www.amazon.com/gp/product/B008200LHW/>`_; the gpsd folks say some pretty awful things about it, but we'll see...)
 * Recommended, one of:
+
   * Two GPIO-connected LEDs on the RPi, ideally different colors (see below).
   * A bitmap display, such as the `Waveshare 2.13 inch E-Ink Display Hat (B) <https://www.waveshare.com/wiki/2.13inch_e-Paper_HAT_(B)>`__, which I got `on Amazon <https://www.amazon.com/gp/product/B075FR81WL/ref=ppx_yo_dt_b_asin_title_o06_s01?ie=UTF8&psc=1>`__ for $25 USD. While e-Ink displays are comparatively sluggish (this one takes an astonishing 15 seconds to re-draw the screen), they offer some major advantages for this purpose: they have very low power consumption, and the displayed information stays visible until the next refresh even without power. This means that if you have a GPS display that refreshes every minute, it will still show the last coordinates as of when it lost power. The one I purchased is also fully assembled and just connects directly to the Pi's 40-pin header.
   * An `adafruit 4567 2.23" Monochrome OLED Bonnet <https://www.adafruit.com/product/4567>`_ OLED. This is much brighter than the e-Ink and can refresh at up to 30Hz, but draws more power. Good if you're using this in your vehicle and have "unlimited" power.
   * Some other variety of display, if you're willing to write a driver class for it. See below for further information.
+
 * Some sort of power source for the Pi. I use a standard adapter when testing and a 10000mAh USB battery pack in the field (specifically the `Anker PowerCore Speed 10000 QA <https://www.amazon.com/gp/product/B01JIYWUBA/>`_). That battery pack is extreme overkill, and powers the unit continuously for 42 hours, when logging at a 5-second interval.
 
 Software Installation
@@ -62,7 +64,7 @@ This assumes you're running on Linux...
 
 6. Put the SD card in your Pi and plug it in. If you're going to be connecting directly with a keyboard and monitor, do so. If you configured WiFi (or want to use a USB Ethernet adapter) and have everything setup correctly, it should eventually connect to your network. If you have issues with a USB Ethernet adapter, try letting the Pi boot up (give it 2-3 minutes) and *then* plug in the adapter.
 7. Log in. The default user is named "pi" with a default password of "raspberry". Run sudo `raspi-config <https://github.com/RPi-Distro/raspi-config>`_ to set things like the locale and timezone. Personally, I usually leave the ``pi`` user password at its default for devices that will never be on an untrusted network. If using a SPI display, enable the SPI kernel module via ``raspi-config``. If you're using an I2C display, enable the I2C module. Reboot as needed.
-8. ``sudo apt-get update && sudo apt-get install haveged git python3-gpiozero python3-setuptools python3-pip gpsd python-gps``
+8. ``sudo apt-get update && sudo apt-get install haveged git python3-gpiozero python3-setuptools python3-pip gpsd python-gps python3-pillow``
 9. If using a display such as the one recommended: ``sudo apt-get install python3-numpy && sudo pip3 install RPi.GPIO``
 10. Run ``sudo pip3 install pizero-gpslog && sudo pizero-gpslog-install``. The installer, ``pizero-gpslog-install``, templates out a systemd unit file, reloads systemd, and enables the unit. Environment variables to set for the service are taken from command line arguments; see ``pizero-gpslog-install --help`` for details. They can be changed after install by editing ``/etc/systemd/system/pizero-gpslog.service``
 11. Find out the USB vendor and product IDs for your GPS. My BU-353S4 uses a Prolific PL2303 serial chipset (vendor 067b product 2303) which is disabled by default in the Debian gpsd udev rules because it matches too many devices. Look at ``/lib/udev/rules.d/60-gpsd.rules``. If your GPS is commented out like mine, uncomment it and save the file.
